@@ -33,16 +33,34 @@ To share these workflows with all contributors of a project:
 
 If you are contributing to an external codebase and want to use these workflows without polluting the repository:
 1. Maintain these skills/rules globally on your local machine (`~/.gemini/config/`).
-2. Prevent local trace files (e.g. `/docs/traces/` or `/task.md`) from showing up in `git status`:
-   - Open `.git/info/exclude` in the project root.
-   - Append the following patterns:
-     ```text
-     /docs/traces/
-     /.agents/
-     /task.md
-     /walkthrough.md
-     ```
-   - *Note:* This file behaves exactly like `.gitignore` but is strictly local to your clone and is never committed or pushed.
+2. To prevent local trace files (e.g., `docs/traces/`, `.agents/`, `task.md`, `walkthrough.md`) from showing up in `git status` without editing the repo's `.gitignore`, choose one of the following methods:
+
+#### Method A: Global Gitignore (Recommended)
+Set up a global gitignore file on your machine that Git applies to all repositories you work on:
+1. Create a global ignore file, e.g., `~/.gitignore_global`.
+2. Add your local paths:
+   ```text
+   /docs/traces/
+   /.agents/
+   /task.md
+   /walkthrough.md
+   ```
+3. Register the file with Git:
+   ```bash
+   git config --global core.excludesfile ~/.gitignore_global
+   ```
+
+#### Method B: Local Clone Exclusion
+If you only want this on a specific repository clone:
+1. Open `.git/info/exclude` in the project root.
+2. Append the same patterns:
+   ```text
+   /docs/traces/
+   /.agents/
+   /task.md
+   /walkthrough.md
+   ```
+   *(Note: This file behaves like `.gitignore` but is strictly local to your clone and is never pushed.)*
 
 ---
 
@@ -61,6 +79,6 @@ on:
 jobs:
   cleanup:
     if: github.event.pull_request.merged == true
-    uses: iceice/ai-standards/.github/workflows/clean-traces.yml@main
+    uses: higherkey/ai-standards/.github/workflows/clean-traces.yml@main
     secrets: inherit
 ```
