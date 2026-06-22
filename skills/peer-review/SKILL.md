@@ -38,7 +38,7 @@ Evaluate the testing state of the branch by referring to `/testing-workflow`:
 ## 3. Immersion & UX Review
 Evaluate the user experience and design alignment:
 - **Design Review:** For design-focused tasks, execute the `/design-review` skill to systematically check layout, copy, aesthetics, accessibility, and branding consistency.
-- Ensure styling matches Exagrow's design tokens and palette.
+- Ensure styling matches the project's design tokens and palette.
 - Check animation timing, transition smoothness, and hover micro-animations.
 - Verify layouts are responsive across mobile and desktop viewports.
 

@@ -44,3 +44,12 @@ This file defines the global architectural principles, development workflows, an
 - **External Files Preferred**: External CSS files should always be preferred for styling.
 - **Simple Page Exception**: For extremely simple pages, a `<style>` section within the HTML/component file is acceptable ONLY if the USER approves.
 - **Specificity**: Prioritize CSS specificity, modularity, and proper cascading over forced overrides.
+
+## 5. Token & Context Efficiency Standards
+
+To prevent growing AI workflows from bloating context windows and exceeding rate limits, all tools, rules, and agents must prioritize token efficiency:
+- **Core Skill Brevity:** Keep core workflow instruction files (`SKILL.md`) compact and under 500 lines. Offload long checklists, extensive examples, templates, or references to subdirectories (e.g., `references/`, `examples/`) so they are read dynamically when needed rather than loaded by default.
+- **Selective Rules:** Keep `AGENTS.md` lean and focused on broad principles. Avoid embedding verbose, file-by-file or project-specific checklists in global rules.
+- **Surgical Edits:** Always prefer target-specific edits (`replace_file_content` or `multi_replace_file_content`) over writing scripts or outputting entire files, minimizing both read and write token costs.
+- **Trace Document Optimization:** When tracking progress on branches, use low-token modification modes (such as Append Mode `/trace-append` or Section Update Mode `/trace-update`) rather than rewriting or consolidating the entire trace document on every minor change.
+- **Redundancy Audits:** Regularly audit customized rules and skills for overlapping guidelines and prune verbose or outdated instructions.
