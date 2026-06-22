@@ -1,0 +1,44 @@
+name: Clean AI Traces
+on:
+  workflow_call:
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.ref || 'main' }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Delete Trace Files
+        run: |
+          if [ -d "docs/traces" ]; then
+            echo "Checking for trace files to delete..."
+            find docs/traces -name "*-work-trace.md" -type f -delete
+            
+            # If the directory is now empty, delete it too
+            if [ -z "$(ls -A docs/traces 2>/dev/null)" ]; then
+              rm -rf docs/traces
+              echo "Deleted empty docs/traces directory."
+            fi
+          fi
+
+      - name: Commit and Push Cleanup
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          
+          # Check for changes
+          if ! git diff --exit-code --quiet; then
+            git add docs/traces/ || true
+            git add docs/ || true
+            git commit -m "chore: Clean up AI feature work traces [skip ci]"
+            git push origin ${{ github.event.pull_request.base.ref || 'main' }}
+            echo "Changes committed and pushed successfully."
+          else
+            echo "No trace files found to clean up."
+          fi
