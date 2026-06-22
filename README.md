@@ -17,12 +17,13 @@ This repository contains the centralized source of truth (SSOT) for personal AI 
 ## 1. Setup in Projects You Own/Lead
 
 To share these workflows with all contributors of a project:
-1. Copy the `.agents/` folder into your repository root:
+1. **Bootstrap `.agents/`** from the central repo using `degit` (no git clone required):
    ```bash
-   # Create .agents/ directory and copy AGENTS.md + skills
-   mkdir .agents
-   cp -r /path/to/ai-standards/skills .agents/
-   cp /path/to/ai-standards/AGENTS.md .agents/
+   npx degit higherkey/ai-standards/skills .agents/skills
+   ```
+   Or if your project uses Node, add the sync script from this repo (see `scripts/sync-ai.js` in any bootstrapped project) and run:
+   ```bash
+   npm run sync-ai
    ```
 2. Check `.agents/` directly into Git.
 3. Integrate localization: Create or update `.agents/AGENTS.md` to append project-specific rules (e.g. brand fonts, CTA endpoints, or architectural patterns) while keeping global rules clean.
@@ -80,5 +81,9 @@ jobs:
   cleanup:
     if: github.event.pull_request.merged == true
     uses: higherkey/ai-standards/.github/workflows/clean-traces.yml@main
+    with:
+      base-branch: ${{ github.event.pull_request.base.ref }}
     secrets: inherit
 ```
+
+> **Note on Permissions:** The reusable workflow requires `contents: write` to commit the cleanup back to your base branch. GitHub's default Actions permission for public repositories may be `contents: read`. If the workflow fails with a 403, go to your repository **Settings → Actions → General → Workflow permissions** and set it to **Read and write permissions**.
