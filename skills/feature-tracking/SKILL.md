@@ -98,6 +98,9 @@ Follow this sequence exactly when concluding work on a branch:
 5. **Senior Peer Review:** Run `/peer-review` as the final quality gate.
 6. **Confirm with User:** Get **EXPLICIT approval** before committing.
 7. **Final Commit & PR:** Seal the code and finalized trace, and run `gh pr create` linking the parent issue.
+8. **Trace File Cleanup:**
+   - **For Owned Projects (CI-managed):** Set up the reusable GitHub Action (`clean-ai-traces.yml`) to automatically delete `/docs/traces/*.md` and commit the cleanup when the PR is merged to `main`.
+   - **For Contribution Mode (CLI-managed):** Delete the trace file(s) under `/docs/traces/` on your branch manually (or using local cleanup scripts) before merging to avoid leaving trace artifacts in the repository history, or rely on local `.git/info/exclude` so they are never tracked in the first place.
 
 ---
 
