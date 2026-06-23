@@ -65,12 +65,29 @@ If you only want this on a specific repository clone:
 
 ---
 
-## 3. Generalizing Trace File Cleanup
+## 3. CI/CD Pipeline Integration (GitHub Actions)
 
-### CI/CD Reusable Workflow (GitHub Actions)
-The reusable workflow `.github/workflows/clean-traces.yml` in this repository automatically cleans up branch traces when a pull request is merged to `main`.
+We provide centralized reusable GitHub Actions workflows to enforce and manage AI traces in your projects.
 
-To use it in your project, create `.github/workflows/clean-ai-traces.yml`:
+### A. Trace Validation Workflow (`validate-trace.yml`)
+Enforces that every pull request opened from a conventionally prefixed branch (e.g., `feat/`, `fix/`) contains its mandatory trace document under `docs/traces/[branch-name]-work-trace.md` before it can be merged.
+
+Create `.github/workflows/validate-ai-traces.yml` in your repository:
+```yaml
+name: Validate AI Traces
+on:
+  pull_request:
+    branches: [main, dev]
+
+jobs:
+  validate:
+    uses: higherkey/ai-standards/.github/workflows/validate-trace.yml@main
+```
+
+### B. Trace Cleanup Workflow (`clean-traces.yml`)
+Automatically deletes branch trace files from the codebase upon a successful pull request merge, keeping repository history clean.
+
+Create `.github/workflows/clean-ai-traces.yml` in your repository:
 ```yaml
 name: Clean AI Traces
 on:
@@ -86,4 +103,21 @@ jobs:
     secrets: inherit
 ```
 
-> **Note on Permissions:** The reusable workflow requires `contents: write` to commit the cleanup back to your base branch. GitHub's default Actions permission for public repositories may be `contents: read`. If the workflow fails with a 403, go to your repository **Settings → Actions → General → Workflow permissions** and set it to **Read and write permissions**.
+> [!IMPORTANT]
+> **Workflow Permissions:** The trace cleanup workflow requires `contents: write` permission to commit and push trace deletions back to the base branch. In public or enterprise repositories, you may need to navigate to **Settings → Actions → General → Workflow permissions** and check **Read and write permissions**.
+
+---
+
+## 4. Contributing & Adding Custom Skills
+
+To define a new specialized AI skill workflow:
+1. Create a new directory under `skills/<your-skill-name>/`.
+2. Inside that directory, create a `SKILL.md` file.
+3. The `SKILL.md` must include YAML frontmatter with `name` and `description` (e.g.):
+   ```yaml
+   ---
+   name: your-skill-name
+   description: "Brief description of what this skill does"
+   ---
+   ```
+4. Keep the body of the `SKILL.md` file under 500 lines. Place verbose checklists, references, or code templates under a sub-folder (e.g. `references/`, `examples/`) to optimize context window usage.

@@ -10,6 +10,7 @@ This file defines the global architectural principles, development workflows, an
 - **Standards:** All commits and PR titles **MUST** follow **Conventional Commits** (e.g., `feat:`, `fix:`) and use **Imperative Tense** (e.g., `Update`, not `Updated`) for the **entire message** (header and body).
 - **Issue Reference:** Link GitHub Issues with `#123` or `fixes #123` where applicable.
 - **Feature Tracking**: MANDATORY running trace document in `/docs/traces/` for all **prefixed branches** (e.g. `feat/`, `fix/`, `chore/`).
+- **Local Exclusions (Contribution Mode):** In contribution mode (external repos), configure local exclusions in `.git/info/exclude` for trace and task files (e.g., `/docs/traces/`, `/task.md`, `/walkthrough.md`) to avoid committing local work artifacts.
 
 ### GitHub & Issue Management (CLI/REST API)
 - **Non-Interactive Mode:** Always run `gh` commands in non-interactive mode (e.g., passing `--title`, `--body`, or `-y`) to prevent terminal hangs on prompt inputs.
@@ -43,7 +44,7 @@ This file defines the global architectural principles, development workflows, an
 - **Avoid Inline CSS**: Inline CSS (the `style="..."` attribute) MUST always be avoided unless critically necessary and used with explicit user permission.
 - **External Files Preferred**: External CSS files should always be preferred for styling.
 - **Simple Page Exception**: For extremely simple pages, a `<style>` section within the HTML/component file is acceptable ONLY if the USER approves.
-- **Specificity**: Prioritize CSS specificity, modularity, and proper cascading over forced overrides.
+- **Specificity:** Prioritize CSS specificity, modularity, and proper cascading over forced overrides.
 
 ## 5. Token & Context Efficiency Standards
 
