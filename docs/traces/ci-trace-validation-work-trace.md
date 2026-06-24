@@ -31,9 +31,11 @@
   - Added Section 5 (Token & Context Efficiency Standards) and local exclusions guidelines to `AGENTS.md` to bring it into parity with global rules.
   - Revamped `README.md` to document the new `validate-trace.yml` action, structured reusable action inputs, and outlined standards for contributing new skills.
   - Packaged the repository as an npm package (`@higherkey/ai-standards`) with a dependency-free sync CLI, verified via a local test suite.
+  - Refined `AGENTS.md` guidelines to make peer reviews and trace status checks run selectively (on commits, milestones, or user prompts) instead of constantly.
 - **Revised Rationale**:
   - Successfully added the GHA trace validator, aligned core standards, and updated the project readme.
   - Standardized distribution to NPM package format and simplified workspace updates for downstream repos.
+  - Streamlined agent operations to prevent excessive file system checks and rule verification calls.
 
 ## 4. Issues and Out of Scope
 - **4a) Potential Blockers**:
