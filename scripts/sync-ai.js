@@ -1,6 +1,12 @@
 import { execSync } from 'child_process';
 import fs from 'fs';
 
+console.warn('⚠️ DEPRECATION WARNING: scripts/sync-ai.js is deprecated.');
+console.warn('⚠️ Please switch to the npm package `@higherkey/ai-standards` instead.');
+console.warn('⚠️ Run `npm install --save-dev @higherkey/ai-standards` and add it to your postinstall script.');
+console.warn('⚠️ See https://github.com/higherkey/ai-standards#readme for details.');
+console.warn('');
+
 const tempDir = '.agents-temp';
 
 try {

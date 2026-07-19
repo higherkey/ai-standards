@@ -1,0 +1,37 @@
+{
+  "name": "@higherkey/ai-standards",
+  "version": "0.1.0",
+  "description": "Centralized AI development standards, workflows, and rules.",
+  "type": "module",
+  "bin": {
+    "ai-standards-sync": "./bin/cli.js"
+  },
+  "files": [
+    "skills",
+    "AGENTS.md",
+    "bin",
+    "README.md"
+  ],
+  "scripts": {
+    "test": "node scripts/test-cli.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/higherkey/ai-standards.git"
+  },
+  "keywords": [
+    "ai",
+    "copilot",
+    "standards",
+    "workflows",
+    "agents",
+    "antigravity",
+    "gemini"
+  ],
+  "author": "higherkey",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/higherkey/ai-standards/issues"
+  },
+  "homepage": "https://github.com/higherkey/ai-standards#readme"
+}

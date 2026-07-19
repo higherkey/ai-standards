@@ -9,7 +9,8 @@ This file defines the global architectural principles, development workflows, an
 - **PowerShell Chaining:** NEVER use `&&` to chain commands. Always use `;` (Windows compatible).
 - **Standards:** All commits and PR titles **MUST** follow **Conventional Commits** (e.g., `feat:`, `fix:`) and use **Imperative Tense** (e.g., `Update`, not `Updated`) for the **entire message** (header and body).
 - **Issue Reference:** Link GitHub Issues with `#123` or `fixes #123` where applicable.
-- **Feature Tracking**: MANDATORY running trace document in `/docs/traces/` for all **prefixed branches** (e.g. `feat/`, `fix/`, `chore/`).
+- **Feature Tracking**: Maintain a running trace document in `/docs/traces/` for all **prefixed branches** (e.g. `feat/`, `fix/`, `chore/`). Make simple, targeted writes to the trace, and avoid checking `git status` repeatedly just to refresh the trace document.
+- **Local Exclusions (Contribution Mode):** In contribution mode (external repos), configure local exclusions in `.git/info/exclude` for trace and task files (e.g., `/docs/traces/`, `/task.md`, `/walkthrough.md`) to avoid committing local work artifacts.
 
 ### GitHub & Issue Management (CLI/REST API)
 - **Non-Interactive Mode:** Always run `gh` commands in non-interactive mode (e.g., passing `--title`, `--body`, or `-y`) to prevent terminal hangs on prompt inputs.
@@ -27,8 +28,8 @@ This file defines the global architectural principles, development workflows, an
 - **Validation:** Every code change requires verification (build/test) and a systematic check to identify and fix any **errors, false assumptions, or missed opportunities**.
 - **Plan Review:** Audit and verify proposed implementation plans using the `/plan-review` checklist before beginning any code modifications (or when not working on code directly) to ensure all constraints, **errors, false assumptions, or missed opportunities** are addressed before execution.
 - **Design Review:** For design-focused tasks (layout, copy, aesthetics, accessibility, or styling consistency), execute the `/design-review` skill to systematically check for errors or styling gaps.
-- **Peer Review:** Follow the full peer-review sequence (using `/peer-review` for Code, UX, Accessibility, Sonar, and Build verification) for significant features, checking the workspace for **errors, false assumptions, or missed opportunities** before requesting final approval.
-- **Workflows:** Utilize standardized workflow templates found in the global `~/.gemini/antigravity/global_workflows/` directory when prompted (e.g., `/plan-review`, `/design-review`, `/feature-tracking`, `/peer-review`).
+- **Peer Review:** Only run the full peer-review sequence (using `/peer-review` for Code, UX, Accessibility, Sonar, and Build verification) when explicitly prompted by the user, when preparing a Git commit, or when a meaningful chunk of work has been completed.
+- **Workflows:** Utilize standardized workflow templates found in the global `~/.gemini/antigravity/global_workflows/` directory when prompted (e.g., `/plan-review`, `/design-review`, `/feature-tracking`, `/peer-review`), when preparing a commit, or after major milestones. Avoid running check workflows on minor intermediate steps.
 
 ## 3. Execution Mandates
 
@@ -43,7 +44,7 @@ This file defines the global architectural principles, development workflows, an
 - **Avoid Inline CSS**: Inline CSS (the `style="..."` attribute) MUST always be avoided unless critically necessary and used with explicit user permission.
 - **External Files Preferred**: External CSS files should always be preferred for styling.
 - **Simple Page Exception**: For extremely simple pages, a `<style>` section within the HTML/component file is acceptable ONLY if the USER approves.
-- **Specificity**: Prioritize CSS specificity, modularity, and proper cascading over forced overrides.
+- **Specificity:** Prioritize CSS specificity, modularity, and proper cascading over forced overrides.
 
 ## 5. Token & Context Efficiency Standards
 
@@ -51,5 +52,5 @@ To prevent growing AI workflows from bloating context windows and exceeding rate
 - **Core Skill Brevity:** Keep core workflow instruction files (`SKILL.md`) compact and under 500 lines. Offload long checklists, extensive examples, templates, or references to subdirectories (e.g., `references/`, `examples/`) so they are read dynamically when needed rather than loaded by default.
 - **Selective Rules:** Keep `AGENTS.md` lean and focused on broad principles. Avoid embedding verbose, file-by-file or project-specific checklists in global rules.
 - **Surgical Edits:** Always prefer target-specific edits (`replace_file_content` or `multi_replace_file_content`) over writing scripts or outputting entire files, minimizing both read and write token costs.
-- **Trace Document Optimization:** When tracking progress on branches, use low-token modification modes (such as Append Mode `/trace-append` or Section Update Mode `/trace-update`) rather than rewriting or consolidating the entire trace document on every minor change.
+- **Trace Document Optimization:** When tracking progress on branches, make simple, targeted writes to the trace using low-token modification modes (such as Append Mode `/trace-append` or Section Update Mode `/trace-update`). Run these updates only when preparing a commit or after completing a meaningful chunk of work, rather than rewriting the document or checking git status constantly.
 - **Redundancy Audits:** Regularly audit customized rules and skills for overlapping guidelines and prune verbose or outdated instructions.

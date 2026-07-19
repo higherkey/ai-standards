@@ -16,17 +16,41 @@ This repository contains the centralized source of truth (SSOT) for personal AI 
 
 ## 1. Setup in Projects You Own/Lead
 
-To share these workflows with all contributors of a project:
-1. **Bootstrap `.agents/`** from the central repo using `degit` (no git clone required):
+To share these workflows with all contributors of a project, you can use one of the following methods:
+
+### Option A: NPM Package (Recommended for Node Projects)
+1. **Install the package:**
+   ```bash
+   npm install --save-dev @higherkey/ai-standards
+   ```
+2. **Configure scripts** in your `package.json` to automate rules updates on installation:
+   ```json
+   "scripts": {
+     "sync-ai": "ai-standards-sync",
+     "postinstall": "ai-standards-sync"
+   }
+   ```
+   *Note: The CLI tool runs as a dependency-free copy helper. If run during postinstall, it will automatically fail-safe (warn but exit with 0) in CI/CD environments if permission errors occur.*
+3. **Initialize & Commit:** Run `npm run sync-ai` once to initialize `.agents/`, then commit the folder to Git.
+4. **Integrate localization:** Create or update `.agents/AGENTS.md` to append project-specific rules. Subsequent syncs will not overwrite your local `AGENTS.md` unless you pass the `--force` flag.
+
+#### 🤖 Instruction for AI Agents
+If you are an AI assistant tasked with setting up or updating these standards in this project, do not write custom download scripts. Instead, run the help menu to view instructions and verify the setup:
+```bash
+npx ai-standards-sync --help
+```
+
+### Option B: Degit (For Non-Node Projects)
+1. **Bootstrap `.agents/`** from the central repo using `degit`:
    ```bash
    npx degit higherkey/ai-standards/skills .agents/skills
    ```
-   Or if your project uses Node, add the sync script from this repo (see `scripts/sync-ai.js` in any bootstrapped project) and run:
+   Or if your project uses Node, add the legacy sync script from this repo (see `scripts/sync-ai.js` in any bootstrapped project) and run:
    ```bash
    npm run sync-ai
    ```
 2. Check `.agents/` directly into Git.
-3. Integrate localization: Create or update `.agents/AGENTS.md` to append project-specific rules (e.g. brand fonts, CTA endpoints, or architectural patterns) while keeping global rules clean.
+3. Integrate localization: Create or update `.agents/AGENTS.md` to append project-specific rules.
 
 ---
 
@@ -65,12 +89,29 @@ If you only want this on a specific repository clone:
 
 ---
 
-## 3. Generalizing Trace File Cleanup
+## 3. CI/CD Pipeline Integration (GitHub Actions)
 
-### CI/CD Reusable Workflow (GitHub Actions)
-The reusable workflow `.github/workflows/clean-traces.yml` in this repository automatically cleans up branch traces when a pull request is merged to `main`.
+We provide centralized reusable GitHub Actions workflows to enforce and manage AI traces in your projects.
 
-To use it in your project, create `.github/workflows/clean-ai-traces.yml`:
+### A. Trace Validation Workflow (`validate-trace.yml`)
+Enforces that every pull request opened from a conventionally prefixed branch (e.g., `feat/`, `fix/`) contains its mandatory trace document under `docs/traces/[branch-name]-work-trace.md` before it can be merged.
+
+Create `.github/workflows/validate-ai-traces.yml` in your repository:
+```yaml
+name: Validate AI Traces
+on:
+  pull_request:
+    branches: [main, dev]
+
+jobs:
+  validate:
+    uses: higherkey/ai-standards/.github/workflows/validate-trace.yml@main
+```
+
+### B. Trace Cleanup Workflow (`clean-traces.yml`)
+Automatically deletes branch trace files from the codebase upon a successful pull request merge, keeping repository history clean.
+
+Create `.github/workflows/clean-ai-traces.yml` in your repository:
 ```yaml
 name: Clean AI Traces
 on:
@@ -86,4 +127,29 @@ jobs:
     secrets: inherit
 ```
 
-> **Note on Permissions:** The reusable workflow requires `contents: write` to commit the cleanup back to your base branch. GitHub's default Actions permission for public repositories may be `contents: read`. If the workflow fails with a 403, go to your repository **Settings → Actions → General → Workflow permissions** and set it to **Read and write permissions**.
+> [!IMPORTANT]
+> **Workflow Permissions:** The trace cleanup workflow requires `contents: write` permission to commit and push trace deletions back to the base branch. In public or enterprise repositories, you may need to navigate to **Settings → Actions → General → Workflow permissions** and check **Read and write permissions**.
+
+---
+
+### C. NPM Registry Publishing (Secrets Configuration)
+
+To publish package updates automatically to the NPM registry via release pipelines, you must configure authentication credentials:
+1. **Generate an NPM Token:** Log in to your account on [npmjs.com](https://www.npmjs.com/), go to **Access Tokens**, and generate a new token with **Publish** permissions. For more details, see [npm Access Tokens](https://docs.npmjs.com/about-access-tokens).
+2. **Add GitHub Secret:** In your GitHub repository settings, go to **Settings → Secrets and variables → Actions** and create a repository secret named `NPM_TOKEN` with the value of the npm token. For more details, see [GitHub Actions Encrypted Secrets](https://docs.github.com/en/actions/security-guides/using-secrets-in-github-actions).
+
+---
+
+## 4. Contributing & Adding Custom Skills
+
+To define a new specialized AI skill workflow:
+1. Create a new directory under `skills/<your-skill-name>/`.
+2. Inside that directory, create a `SKILL.md` file.
+3. The `SKILL.md` must include YAML frontmatter with `name` and `description` (e.g.):
+   ```yaml
+   ---
+   name: your-skill-name
+   description: "Brief description of what this skill does"
+   ---
+   ```
+4. Keep the body of the `SKILL.md` file under 500 lines. Place verbose checklists, references, or code templates under a sub-folder (e.g. `references/`, `examples/`) to optimize context window usage.
