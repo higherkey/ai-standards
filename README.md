@@ -2,21 +2,42 @@
 
 This repository contains the centralized source of truth (SSOT) for personal AI rules and skills. It defines development standards, review workflows, and tracking mechanisms optimized for agentic coding assistants (like Antigravity).
 
+---
+
 ## Directory Structure
 
 - `AGENTS.md`: Global behavior guidelines, engineering standards, and execution constraints.
-- `skills/`: Specialized task workflows:
-  - `plan-review/`: Audits implementation plans for errors/opportunities before coding.
-  - `peer-review/`: Guides the final code, QA, and testing checks.
-  - `design-review/`: Focuses on layout, UX, accessibility, and copywriting standards.
-  - `feature-tracking/`: Automatically maintains branch-level progress logs.
-  - `sonarqube-review/` & `testing-workflow/`: Quality and testing guidelines.
+- `skills/`: Production-grade, token-efficient engineering skills:
+  - **Orchestration & Workflow:**
+    - `run-issue-to-pr/`: Autonomous end-to-end issue resolution using Architect/Subagent separation and dynamic skill selection.
+    - `plan-review/`: Audits implementation plans for errors/opportunities and domain skill alignment before coding.
+    - `peer-review-with-quality/`: Senior pre-commit quality gate (surgical diffs, 100% tests, SonarCloud, trace reconciliation).
+    - `peer-review-with-quality/`: Canonical quality review workflow with full automated test enforcement, SonarCloud compliance, and dynamic skill selection.
+    - `feature-tracking/`: Automatically maintains branch-level progress logs in `/docs/traces/`.
+    - `create-github-issue/`: Issue creation guidelines with project board integration and REST API relationships.
+    - `git-branch-cleanup/`: Synchronizes local branch list by pruning remote-deleted branches.
+    - `github-commands/`: Non-interactive `gh` CLI and REST API cheatsheet.
+  - **Reasoning, Testing & Debugging:**
+    - `doubt-driven-development-slim/`: 5-step adversarial evaluation cycle for non-trivial decisions.
+    - `test-driven-development-slim/`: Red-Green-Refactor loop and boundary-only mocking.
+    - `debugging-and-error-recovery-slim/`: Scientific debugging cycle, falsifiable hypotheses, and regression guards.
+    - `testing-workflow/`: Unit and integration test execution and verification guidelines.
+    - `sonarqube-review/`: SonarCloud quality gate compliance and static analysis triage.
+  - **Frontend & Web Quality:**
+    - `frontend-ui-engineering-slim/`: Modular architecture, zero `!important`, zero inline styles, layout stability.
+    - `accessibility-and-a11y-slim/`: WCAG 2.2 AA compliance, semantic HTML, keyboard focus trapping.
+    - `longest-contentful-paint-slim/`: Core Web Vitals LCP optimization (TTFB < 800ms, priority hinting, critical CSS).
+    - `design-review/`: Comprehensive UI/UX, aesthetics, copy, and layout verification.
+  - **Backend, Data & Infrastructure:**
+    - `api-and-interface-design-slim/`: RFC 7807 problem details, idempotency keys, boundary validation, and pagination.
+    - `database-and-migrations-slim/`: Zero-downtime expand/contract migrations, non-blocking indexing, connection pool safety.
+    - `security-and-hardening-slim/`: OWASP Top 10 defense, parameterized queries, IDOR defense, and secret hygiene.
+    - `performance-optimization-slim/`: Measurement-first profiling, INP yielding, hot-path optimization, memory leak prevention.
+    - `ci-cd-and-automation-slim/`: Non-interactive pipeline invariants, reusable actions, SemVer release trains.
 
 ---
 
 ## 1. Setup in Projects You Own/Lead
-
-To share these workflows with all contributors of a project, you can use one of the following methods:
 
 ### Option A: NPM Package (Recommended for Node Projects)
 1. **Install the package:**
@@ -45,10 +66,6 @@ npx ai-standards-sync --help
    ```bash
    npx degit higherkey/ai-standards/skills .agents/skills
    ```
-   Or if your project uses Node, add the legacy sync script from this repo (see `scripts/sync-ai.js` in any bootstrapped project) and run:
-   ```bash
-   npm run sync-ai
-   ```
 2. Check `.agents/` directly into Git.
 3. Integrate localization: Create or update `.agents/AGENTS.md` to append project-specific rules.
 
@@ -58,34 +75,19 @@ npx ai-standards-sync --help
 
 If you are contributing to an external codebase and want to use these workflows without polluting the repository:
 1. Maintain these skills/rules globally on your local machine (`~/.gemini/config/`).
-2. To prevent local trace files (e.g., `docs/traces/`, `.agents/`, `task.md`, `walkthrough.md`) from showing up in `git status` without editing the repo's `.gitignore`, choose one of the following methods:
+2. To prevent local trace files (e.g., `docs/traces/`, `.agents/`, `task.md`, `walkthrough.md`) from showing up in `git status` without editing the repo's `.gitignore`:
 
-#### Method A: Global Gitignore (Recommended)
-Set up a global gitignore file on your machine that Git applies to all repositories you work on:
-1. Create a global ignore file, e.g., `~/.gitignore_global`.
-2. Add your local paths:
-   ```text
-   /docs/traces/
-   /.agents/
-   /task.md
-   /walkthrough.md
-   ```
-3. Register the file with Git:
-   ```bash
-   git config --global core.excludesfile ~/.gitignore_global
-   ```
-
-#### Method B: Local Clone Exclusion
-If you only want this on a specific repository clone:
-1. Open `.git/info/exclude` in the project root.
-2. Append the same patterns:
-   ```text
-   /docs/traces/
-   /.agents/
-   /task.md
-   /walkthrough.md
-   ```
-   *(Note: This file behaves like `.gitignore` but is strictly local to your clone and is never pushed.)*
+#### Global Gitignore Setup
+```bash
+git config --global core.excludesfile ~/.gitignore_global
+```
+Add the following lines to `~/.gitignore_global`:
+```text
+/docs/traces/
+/.agents/
+/task.md
+/walkthrough.md
+```
 
 ---
 
@@ -127,17 +129,6 @@ jobs:
     secrets: inherit
 ```
 
-> [!IMPORTANT]
-> **Workflow Permissions:** The trace cleanup workflow requires `contents: write` permission to commit and push trace deletions back to the base branch. In public or enterprise repositories, you may need to navigate to **Settings → Actions → General → Workflow permissions** and check **Read and write permissions**.
-
----
-
-### C. NPM Registry Publishing (Secrets Configuration)
-
-To publish package updates automatically to the NPM registry via release pipelines, you must configure authentication credentials:
-1. **Generate an NPM Token:** Log in to your account on [npmjs.com](https://www.npmjs.com/), go to **Access Tokens**, and generate a new token with **Publish** permissions. For more details, see [npm Access Tokens](https://docs.npmjs.com/about-access-tokens).
-2. **Add GitHub Secret:** In your GitHub repository settings, go to **Settings → Secrets and variables → Actions** and create a repository secret named `NPM_TOKEN` with the value of the npm token. For more details, see [GitHub Actions Encrypted Secrets](https://docs.github.com/en/actions/security-guides/using-secrets-in-github-actions).
-
 ---
 
 ## 4. Contributing & Adding Custom Skills
@@ -145,11 +136,11 @@ To publish package updates automatically to the NPM registry via release pipelin
 To define a new specialized AI skill workflow:
 1. Create a new directory under `skills/<your-skill-name>/`.
 2. Inside that directory, create a `SKILL.md` file.
-3. The `SKILL.md` must include YAML frontmatter with `name` and `description` (e.g.):
+3. The `SKILL.md` must include YAML frontmatter with `name` and `description`:
    ```yaml
    ---
    name: your-skill-name
    description: "Brief description of what this skill does"
    ---
    ```
-4. Keep the body of the `SKILL.md` file under 500 lines. Place verbose checklists, references, or code templates under a sub-folder (e.g. `references/`, `examples/`) to optimize context window usage.
+4. Keep the body of the `SKILL.md` file under 250 lines. Place verbose checklists, references, or code templates under a sub-folder (e.g. `references/`, `examples/`) to optimize context window usage.

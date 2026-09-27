@@ -1,6 +1,6 @@
 {
   "name": "@higherkey/ai-standards",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Centralized AI development standards, workflows, and rules.",
   "type": "module",
   "bin": {
