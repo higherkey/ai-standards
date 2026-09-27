@@ -95,7 +95,7 @@ Follow this sequence exactly when concluding work on a branch:
    git diff --name-only <target-branch>
    ```
 4. **Functional Walkthrough:** Present a walkthrough (build output, screenshots, or written summary).
-5. **Senior Peer Review:** Run `/peer-review` as the final quality gate.
+5. **Senior Peer Review:** Run `/peer-review-with-quality` as the final quality gate.
 6. **Confirm with User:** Get **EXPLICIT approval** before committing.
 7. **Final Commit & PR:** Seal the code and finalized trace, and run `gh pr create` linking the parent issue.
 8. **Trace File Cleanup:**
