@@ -31,13 +31,14 @@ These instructions provide a baseline for AI agent behavior across all projects 
 - **PowerShell Chaining:** NEVER use `&&` to chain commands. Always use `;` (Windows compatible).
 - **Standards:** All commits and PR titles **MUST** follow **Conventional Commits** (e.g., `feat:`, `fix:`) and use **Imperative Tense** (e.g., `Update`, not `Updated`) for the **entire message** (header and body).
 - **Issue Reference:** Link GitHub Issues with `#123` or `fixes #123` where applicable.
-- **Feature Tracking:** Maintain a running trace document in `/docs/traces/` for all **prefixed branches** (e.g. `feat/`, `fix/`, `chore/`). Make simple, targeted writes to the trace, and avoid checking `git status` repeatedly just to refresh the trace document.
-- **Local Exclusions (Contribution Mode):** In contribution mode (external repos), configure local exclusions in `.git/info/exclude` for trace and task files (e.g., `/docs/traces/`, `/task.md`, `/walkthrough.md`) to avoid committing local work artifacts.
+- **Branch Notes:** Maintain a running branch notes document in `/docs/branch-notes/` for all **prefixed branches** (e.g. `feat/`, `fix/`, `chore/`). Track Discoveries, 4a Blockers, 4b Quick Wins, and 4c Deferred Items.
+- **Check-in Cadence:** Run local verification first, then present 4a/4b/4c items at plan chunk milestones and the Pre-Commit Gate before committing.
+- **Local Exclusions (Contribution Mode):** In contribution mode (external repos), configure local exclusions in `.git/info/exclude` for branch notes and task files (e.g., `/docs/branch-notes/`, `/task.md`, `/walkthrough.md`) to avoid committing local work artifacts.
 
 ### GitHub & Issue Management (CLI/REST API)
 - **Non-Interactive Mode:** Always run `gh` commands in non-interactive mode (e.g., passing `--title`, `--body`, or `-y`) to prevent terminal hangs on prompt inputs.
 - **Sub-Issue Relationships:** Use the REST API endpoint `POST /repos/{owner}/{repo}/issues/{parent_number}/sub_issues` to attach sub-issues, passing the child's database ID via `-F sub_issue_id=[ID]`. Avoid GraphQL mutations for this.
-- **PR Verification:** Ensure every Pull Request (`gh pr create`) explicitly references its parent issue number and the branch trace document.
+- **PR Verification:** Ensure every Pull Request (`gh pr create`) explicitly references its parent issue number and the branch notes document.
 
 ### SonarQube & Code Quality
 - **Architecture:** Preference for a **Unified Monorepo Architecture** when using SonarCloud.
@@ -73,4 +74,4 @@ These instructions provide a baseline for AI agent behavior across all projects 
 - **Core Skill Brevity:** Keep core workflow instruction files (`SKILL.md`) compact and under 250 lines. Offload long checklists, extensive examples, templates, or references to subdirectories so they are read dynamically when needed rather than loaded by default.
 - **Selective Rules:** Keep rules lean and focused on broad principles. Avoid embedding verbose, file-by-file or project-specific checklists in global rules.
 - **Surgical Edits:** Always prefer target-specific edits over writing scripts or outputting entire files, minimizing both read and write token costs.
-- **Trace Document Optimization:** When tracking progress on branches, make simple, targeted writes to the trace using low-token modification modes (such as Append Mode `/trace-append` or Section Update Mode `/trace-update`). Run these updates only when preparing a commit or after completing a meaningful chunk of work.
+- **Branch Notes Optimization:** Keep branch notes documents short, focused on delta discoveries and 4a/4b/4c items, eliminating redundant checklists and high-token rewrites.

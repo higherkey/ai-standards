@@ -1,121 +1,82 @@
 ---
 name: feature-tracking
-description: "Maintain a running trace document of work on feature branches"
+description: "Maintain a running branch notes document and manage the continuous 4a/4b/4c issue pipeline on feature branches"
 ---
 
-# Feature Tracking Workflow
+# Branch Notes & Continuous Feature Tracking Workflow
 
-Whenever you are working on a branch created with a **conventional prefix** (e.g., `feat/`, `fix/`, `chore/`, `refactor/`, `docs/`, `test/`, `perf/`, `build/`, `ci/`, `style/`), you MUST create and strictly maintain a "work trace" document. Unprefixed branches are exempt.
-
----
-
-## Quality Check Mandate
-When initializing, updating, or consolidating your feature work trace, systematically audit the progress, commits, and plans to identify any **errors, false assumptions, or missed opportunities** in the active development scope.
+Whenever you are working on a branch created with a **conventional prefix** (e.g., `feat/`, `fix/`, `chore/`, `refactor/`, `docs/`, `test/`, `perf/`, `build/`, `ci/`, `style/`), you MUST create and maintain a **Branch Notes** document. Unprefixed branches (e.g. `main`, `dev`) are exempt.
 
 ---
 
+## 1. Document Setup & Location
 
-## 1. Document Setup
-
-- **File Path**: `/docs/traces/[branch-name]-work-trace.md`
-    - Example: For branch `feat/lobby-ui`, the file is `/docs/traces/feat-lobby-ui-work-trace.md`.
-- **Trigger**: Create this document **immediately** when starting work on a new prefixed branch.
-- **Persistence**: Committed to the branch. Cleared from `main` automatically via GitHub Action.
-
----
-
-## 2. Document Structure
-
-Keep all sections as concise as possible without losing critical information.
-
-### 1) Planned Work
-- **TODO List**: High-level task list (mirrors your internal `task.md`).
-- **File List**: Expected files to change, grouped by feature area.
-- **Rationale**: Brief reason and expected change per file or group.
-
-### 3) In Progress Work
-- **Active Files**: Lightweight list of files currently being modified.
-
-### 3) Completed Work
-- **Summary**: Files changed, grouped by feature.
-- **Revised Rationale**: What was actually changed and why.
-
-### 4) Issues and Out of Scope
-Any discovery that deviates from the original plan MUST be captured immediately.
-- **4a) Potential Blockers**: Risks, discovered bugs, or architectural hurdles that prevent completion of the current task. 
-- **4b) Opportunities**: Out-of-scope improvements, refactors, or new feature ideas discovered during development.
+- **File Path**: `/docs/branch-notes/[normalized-branch-name]-notes.md`
+  - Normalize the branch name by replacing `/`, `_`, and spaces with `-`.
+  - Example: For branch `feat/room-concurrency`, the file is `docs/branch-notes/feat-room-concurrency-notes.md`.
+- **Trigger**: Initialize this document **immediately** upon creating or switching to a new prefixed branch.
+- **Persistence**: Committed to the branch. Cleared from `main` automatically via GitHub Actions cleanup.
+- **Local Exclusions**: When working in external repositories (contribution mode), configure `.git/info/exclude` for `docs/branch-notes/` to prevent committing local work artifacts.
 
 ---
 
-## 3. Trace Modes & Helpers
+## 2. Document Structure (Ultra-Low Token Standard)
 
-To minimize token usage and rate limits, the trace document is updated using three distinct sub-modes. Always prefer the lowest-cost mode for the task:
+Keep the document concise, high-signal, and bounded to 4 core sections:
 
-### A) Append Mode (`/trace-append`)
-Use this for a **minimal-reach (write-only)** operation to log new events. Read only what you must to find the insertion point, and write only the new line. Do not re-summarize or format other sections.
-* **When:** Adding a new blocker/opportunity, starting work on a file, or completing a file.
-* **Format:** Use the `[raw append]` prefix.
-  ```markdown
-  - [raw append] Brief description of the item.
-  ```
+```markdown
+# Branch Notes: [branch-name]
 
-### B) Update Mode (`/trace-update`)
-Use this for a **section-level** cleanup. Read and modify *only* the targeted section(s) (typically Section 2 or 3).
-* **When:** Moving tasks from In Progress (Section 2) to Completed (Section 3), or formatting accumulated `[raw append]` items in a single section.
-* **Format:**
-  ```markdown
-  - **Active Files / Summary**:
-      - `path/to/file.ts` — [brief description of work]
-  ```
+## 1. Discoveries & Deviations
+- Concise bullet points summarizing architectural discoveries, schema nuances, or deviations from the original plan.
 
-### C) Consolidate Mode (`/trace-consolidate`)
-Use this for a **full file read and rewrite** to produce a clean, coherent work trace.
-* **When:** Resuming a session, preparing for a PR/Merge finalization, or cleaning up a heavily cluttered document.
-* **Action:** Reconcile all sections, integrate all `[raw append]` items, and verify status against recent Git history.
+## 2. Blockers & Risks (4a)
+- Active impediments, failing tools, breaking external dependencies, or environment constraints preventing completion.
 
----
+## 3. Quick Wins (4b)
+- Relevant, low-hanging improvements or missed edge cases discovered during work that are folded directly into this branch/PR before closing.
 
-## 4. Automatic Checkpoint Triggers
-
-- **Branch Start:** Create the trace document, write the full Section 1 (Planned Work), and trigger `/plan-review` on the proposed implementation plan to catch design constraints early.
-- **Session Resume:** If resuming a branch, the agent **must** explicitly ask the user:
-  > *"I see we're resuming `[branch-name]`. Should I consolidate the trace document before we continue?"*
-- **Finalization (Pre-Commit):** Execute a full `/trace-consolidate` and verify the file list before submitting the PR.
-
----
-
-## 5. The Finalization Process (PR/Merge)
-
-Follow this sequence exactly when concluding work on a branch:
-
-1. **Verification & Testing:** Run `/testing-workflow` to ensure all tests pass and coverage is adequate.
-2. **Issue Triage (4a & 4b):** Present all Section 4 items to the user. Link accepted sub-issues and blockers using the REST API (see Section 6).
-3. **Consolidate & Parity Check:** Run `/trace-consolidate` and compare the actual changes to Section 1:
-   ```powershell
-   git diff --name-only <target-branch>
-   ```
-4. **Functional Walkthrough:** Present a walkthrough (build output, screenshots, or written summary).
-5. **Senior Peer Review:** Run `/peer-review-with-quality` as the final quality gate.
-6. **Confirm with User:** Get **EXPLICIT approval** before committing.
-7. **Final Commit & PR:** Seal the code and finalized trace, and run `gh pr create` linking the parent issue.
-8. **Trace File Cleanup:**
-   - **For Owned Projects (CI-managed):** Set up the reusable GitHub Action (`clean-ai-traces.yml`) to automatically delete `/docs/traces/*.md` and commit the cleanup when the PR is merged to `main`.
-   - **For Contribution Mode (CLI-managed):** Delete the trace file(s) under `/docs/traces/` on your branch manually (or using local cleanup scripts) before merging to avoid leaving trace artifacts in the repository history, or rely on local `.git/info/exclude` so they are never tracked in the first place.
-
----
-
-## 6. Technical Guide: Issue Relationship Management (REST API)
-
-Always use the GitHub REST API rather than GraphQL to link sub-issues. 
-
-### A) Retrieve the Child Issue's Database ID
-In PowerShell, the endpoint template must be quoted to prevent syntax errors:
-```powershell
-gh api "/repos/{owner}/{repo}/issues/[child_issue_number]" --jq .id
+## 4. Deferred Items (4c)
+- Out-of-scope discoveries, architectural refactors, or new feature ideas that cannot be completed in this branch. These serve as candidates for new GitHub issues.
 ```
 
-### B) Link the Sub-Issue to the Parent
-Using the database ID retrieved above, attach the sub-issue to its parent:
-```powershell
-gh api --method POST "/repos/{owner}/{repo}/issues/[parent_issue_number]/sub_issues" -F sub_issue_id=[CHILD_DATABASE_ID]
-```
+---
+
+## 3. The Continuous Issue Engine (4a / 4b / 4c)
+
+The core purpose of Section 4 is to power a **continuous cycle of issue resolution and creation**:
+
+- **4a) Blockers & Risks**: Halt-the-line items. Must be surfaced immediately.
+- **4b) Quick Wins (Opportunities)**: Small, relevant improvements that are fast and safe to implement within the active branch. Resolve these in the current PR rather than deferring.
+- **4c) Deferred Items (Backlog Candidates)**: Discoveries that would cause scope creep. At check-in gates, present these to the user to spawn new GitHub issues via `gh issue create`.
+
+---
+
+## 4. Streamlined Check-in Cadence
+
+The agent MUST present the status of all `4a`, `4b`, and `4c` items and check in with the user at these specific junctures:
+
+1. **Staged Plan Milestones / Work Chunks**:
+   - If an implementation plan has distinct phases or chunks, check in after completing a chunk to report progress and present newly discovered 4a/b/c items before starting the next chunk.
+2. **Pre-Commit Quality Gate (Primary Triage Checkpoint)**:
+   - **Local Verification First**: Run all local builds and automated test suites (`dotnet test`, `npm test`, etc.) to verify everything is 100% green.
+   - **User Check-in**: Present 4a/b/c status to the user:
+     - Report which 4b quick wins were included.
+     - Review 4c deferred items and offer to create GitHub issues with estimates/labels.
+     - Request explicit user approval to commit and open the PR.
+3. **Autonomous Follow-Through**:
+   - Once the user approves the Pre-Commit Gate, the agent commits, pushes, and creates the PR via `gh pr create`.
+   - The agent monitors remote CI checks (`gh run watch` / `gh pr checks`) until all checks pass.
+   - If CI is green, proceed autonomously to merge into `dev`. Do NOT introduce an extra, redundant pre-merge pause unless CI failed or manual intervention is strictly required.
+
+### Autonomous Exceptions
+- If the user explicitly directs the agent to **"work the issue all the way to completion"** or invokes **`/run-issue-to-pr`**, intermediate milestone check-ins are skipped, and the agent executes autonomously straight through to the verified PR.
+
+---
+
+## 5. Metacognitive Dynamic Scaling
+
+Apply the foundation principles from `GEMINI.md` / `AGENTS.md`:
+- **Heuristics Over Rigid Examples**: Use architectural judgment to classify items into 4b (quick win) vs 4c (defer). Do not follow mechanical checklists when task context dictates otherwise.
+- **Safety Hierarchy**: **Data Integrity > System Safety > Contract Correctness > Token/Context Efficiency > Speed**.
+- **Minimal Token Waste**: Write short, targeted bullets. Never rewrite the entire document when appending a single discovery or issue.
