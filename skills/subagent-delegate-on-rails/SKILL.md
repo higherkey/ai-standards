@@ -1,9 +1,9 @@
 ---
-name: subagent-tight-rails
+name: subagent-delegate-on-rails
 description: "Universal task decomposition and dispatch engine for executing work through token-efficient, low-reasoning Flash subagents with strict rails"
 ---
 
-# Universal Tight-Rails Subagents (`/subagent-tight-rails`)
+# Subagent Delegate on Rails (`/subagent-delegate-on-rails`)
 
 This skill defines the decomposition and dispatch engine for executing work through focused, token-efficient subagents while protecting the primary agent's context memory.
 

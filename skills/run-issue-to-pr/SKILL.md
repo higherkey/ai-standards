@@ -77,7 +77,7 @@ Draft the implementation plan incorporating the active skills' invariants. Audit
 
 ### Stage 3: Subagent Execution & Implementation
 1. Decompose the plan into independent implementation chunks.
-2. Follow `/subagent-tight-rails` for metacognitive decomposition, heuristic model tier selection (`flash` / `flash_lite`), and anti-chatter prompt rails.
+2. Follow `/subagent-delegate-on-rails` for metacognitive decomposition, heuristic model tier selection (`flash` / `flash_lite`), and anti-chatter prompt rails.
 3. Dispatch focused subagents (`Implementer`, `TestEngineer`, etc.) with Artifact + Contract only.
 4. The Architect verifies and reconciles subagent output against the plan using doubt-driven classification.
 
