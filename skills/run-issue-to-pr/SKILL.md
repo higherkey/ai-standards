@@ -77,11 +77,9 @@ Draft the implementation plan incorporating the active skills' invariants. Audit
 
 ### Stage 3: Subagent Execution & Implementation
 1. Decompose the plan into independent implementation chunks.
-2. Dispatch subagents using `invoke_subagent`:
-   - Role: `Code Implementer` or `Test Engineer`.
-   - Model: `flash` (fast, focused execution).
-   - Prompt: Provide exact file path, precise instructions, and constraints (e.g. no full-file rewrites, use surgical replacements).
-3. The Architect verifies subagent output against the plan.
+2. Follow `/subagent-tight-rails` for metacognitive decomposition, heuristic model tier selection (`flash` / `flash_lite`), and anti-chatter prompt rails.
+3. Dispatch focused subagents (`Implementer`, `TestEngineer`, etc.) with Artifact + Contract only.
+4. The Architect verifies and reconciles subagent output against the plan using doubt-driven classification.
 
 ### Stage 4: Verification & Quality Review Gate
 1. **Automated Testing:** Run test suites via `/testing-workflow` (100% pass rate required).

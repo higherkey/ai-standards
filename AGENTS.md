@@ -7,6 +7,17 @@
   1. It is verifiably better/faster for the user to do so directly, or
   2. It is impossible for the agent (e.g. interactive browser SSO/MFA, physical hardware manipulation, or entering secrets/passwords).
 
+## Metacognitive Allowances, Heuristics Over Examples, & Conflict Resolution
+- **Heuristics Over Rigid Examples:** Rules, workflows, and skills express principles and heuristic frameworks. Concrete examples (such as specific model names like `flash` or `flash_lite`, named tool sequences, or enumerated work archetypes) are illustrative reference points, never exhaustive or restrictive boundaries. Never treat an illustrative example as an absolute constraint unless explicitly prefixed with MUST or NEVER.
+- **Metacognitive Dynamic Scaling:** Agents possess full autonomy to evaluate task complexity, context pressure, and domain stakes dynamically:
+  - *Model-Tier & Resource Selection:* Autonomously decide whether a task can be delegated to the cheapest suitable tier (e.g. `flash_lite` for mechanical search/syntax checks, `flash` for focused audits/edits), needs a higher-capability model tier (`pro`), or should be executed directly by the parent agent to eliminate delegation overhead.
+  - *Archetype Flexibility:* Adapt, customize, or synthesize new work archetypes beyond standard templates whenever a problem warrants a specialized operational posture.
+  - *Skill Invocation Autonomy:* Dynamically identify, chain, or omit domain skills based on actual project context rather than mechanical checklist compliance.
+- **Principled Conflict & Gap Resolution:** When rules appear to conflict or when operating in unguided edge cases:
+  1. Default to core intent and safety hierarchy: **Data Integrity > System Safety > Contract Correctness > Token/Context Efficiency > Speed**.
+  2. Reason through trade-offs explicitly rather than freezing, hallucinating compliance, or silently bypassing constraints.
+  3. When an ambiguous trade-off crosses a user-intent boundary, escalate to the user with a concise, actionable question.
+
 ---
 
 # Global Foundation Mandates (Antigravity)

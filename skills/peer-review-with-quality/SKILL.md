@@ -36,6 +36,7 @@ Review all staged and unstaged changes (`git diff`):
 - **Minimal Surface Area:** Ensure only necessary lines were touched. Discard accidental formatting diffs, unintended deletions, or whitespace churn.
 - **Clean Hygiene:** No dead code, debug statements (`console.log`, `debugger`), or orphaned temporary files.
 - **Convention Adherence:** Adheres to SOLID, DRY, and project-specific architecture patterns.
+- **Adversarial Subagent Audit:** For non-trivial diffs (> 3 files), dispatch an adversarial auditor using `/subagent-tight-rails` to eliminate author confirmation bias and preserve parent context memory.
 
 ### 3. Build & Test Pass Gate
 - Run the project's build command (`npm run build`, `dotnet build`, etc.) to guarantee zero compilation errors or compiler warnings.
