@@ -8,8 +8,7 @@ This repository contains the centralized source of truth (SSOT) for personal AI 
 
 - `AGENTS.md`: Global behavior guidelines, engineering standards, and execution constraints.
 - `skills/`: Production-grade, token-efficient engineering skills:
-  - **Orchestration & Workflow:**
-    - `run-issue-to-pr/`: Autonomous end-to-end issue resolution using Architect/Subagent separation and dynamic skill selection.
+    - `resolve-issue/`: Goal-driven autonomous issue resolution with upfront PR vs. Merge triage, runtime verification, and manual step disclosure.
     - `plan-review/`: Audits implementation plans for errors/opportunities and domain skill alignment before coding.
     - `peer-review-with-quality/`: Senior pre-commit quality gate (surgical diffs, 100% tests, SonarCloud, trace reconciliation).
     - `peer-review-with-quality/`: Canonical quality review workflow with full automated test enforcement, SonarCloud compliance, and dynamic skill selection.

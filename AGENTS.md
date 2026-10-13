@@ -53,8 +53,11 @@ These instructions provide a baseline for AI agent behavior across all projects 
 - **Validation:** Every code change requires verification (build/test) and a systematic check to identify and fix any **errors, false assumptions, or missed opportunities**.
 - **Plan Review:** Audit and verify proposed implementation plans using the `/plan-review` checklist before beginning any code modifications (or when not working on code directly) to ensure all constraints, **errors, false assumptions, or missed opportunities** are addressed before execution.
 - **Design Review:** For design-focused tasks (layout, copy, aesthetics, accessibility, or styling consistency), execute the `/design-review` skill to systematically check for errors or styling gaps.
-- **Peer Review:** Only run the full peer-review-with-quality sequence (using `/peer-review-with-quality` for Code, UX, Accessibility, Sonar, and Build verification) when explicitly prompted by the user, when preparing a Git commit, or when a meaningful chunk of work has been completed.
-- **Workflows:** Utilize standardized skills in `~/.gemini/config/skills/` (e.g., `/run-issue-to-pr`, `/plan-review`, `/design-review`, `/feature-tracking`, `/peer-review-with-quality`), when preparing a commit, or after major milestones. Avoid running check workflows on minor intermediate steps.
+- **Workflows:** Utilize standardized skills in `~/.gemini/config/skills/` (e.g., `/resolve-issue`, `/plan-review`, `/design-review`, `/feature-tracking`, `/peer-review-with-quality`), when preparing a commit, or after major milestones. Avoid running check workflows on minor intermediate steps.
+- **Terminal Gate Clarity:** When starting issue resolution, immediately clarify at Step 0 whether the delivery gate is a Pull Request or Merge into `dev`. If ambiguous, ask the user on Turn 1 before deep implementation.
+- **Runtime Verification Mandate:** Static AST parsing or syntax checks alone are NEVER sufficient to claim verification. Every script, build, or feature modification must be executed and validated in the real runtime environment before proposing or executing a merge.
+- **Upfront Manual Step Disclosure:** Agents must explicitly identify automated tests vs. required manual steps during planning. Any step that cannot be autonomously executed must be surfaced immediately in the plan and documented in the PR checklist.
+- **Merge Risk Evaluation:** When requested to merge directly, evaluate if pending manual steps present a critical/breaking risk (e.g. database schema migrations, auth security, port bindings). If critical, HALT at the PR for user sign-off. If non-blocking, proceed with merge and document in the PR.
 
 ---
 

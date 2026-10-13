@@ -69,8 +69,7 @@ The agent MUST present the status of all `4a`, `4b`, and `4c` items and check in
    - The agent monitors remote CI checks (`gh run watch` / `gh pr checks`) until all checks pass.
    - If CI is green, proceed autonomously to merge into `dev`. Do NOT introduce an extra, redundant pre-merge pause unless CI failed or manual intervention is strictly required.
 
-### Autonomous Exceptions
-- If the user explicitly directs the agent to **"work the issue all the way to completion"** or invokes **`/run-issue-to-pr`**, intermediate milestone check-ins are skipped, and the agent executes autonomously straight through to the verified PR.
+- If the user explicitly directs the agent to **"work the issue all the way to completion"** or invokes **`/resolve-issue`**, intermediate milestone check-ins are skipped, and the agent executes autonomously straight through to the verified PR or merge destination.
 
 ---
 
