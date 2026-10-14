@@ -17,8 +17,8 @@ High-density guidelines for driving behavior through automated tests. Tests are 
   test first           code to pass         preserve green
 ```
 
-1. **RED:** Write the test before modifying production code. Execute the test runner and verify that it fails with the expected assertion failure (not a syntax or configuration error).
-2. **GREEN:** Write the simplest, most direct code that satisfies the test. Do not build speculative abstractions.
+1. **RED:** Write the test before modifying production code. **Runtime Verification Mandate:** You must actively execute the real test runner command (`npm test`, `dotnet test`, `pytest`) in the terminal—static syntax checks or AST inspection alone are strictly invalid. Confirm that the test actually fails with the expected assertion failure (not a compilation or syntax error).
+2. **GREEN:** Write the simplest, most direct code that satisfies the test. Re-execute the test runner to prove it passes. Do not build speculative abstractions.
 3. **REFACTOR:** Clean up code, remove duplication, and improve naming while keeping tests passing.
 
 ---
@@ -67,8 +67,9 @@ Over-mocking creates tests that pass even when the system is completely broken.
 
 ## 5. Verification Checklist
 
-- [ ] Test written and verified RED before implementation began.
-- [ ] Test verified GREEN with minimal production code.
+- [ ] **Runtime Verification Mandate:** Test execution command actually run in real environment (AST/syntax inspection alone is strictly prohibited).
+- [ ] Test written and verified RED via runner execution before implementation began.
+- [ ] Test verified GREEN with minimal production code via runner execution.
 - [ ] AAA pattern used with explicit section separation.
 - [ ] Only external I/O boundaries mocked; zero domain logic mocked.
 - [ ] Zero flaky timers or sleeps; tests run deterministically in random order.
