@@ -24,9 +24,10 @@ When writing and executing tests, systematically audit the test plans and suites
 ---
 
 ## 2. Test Execution & Verification
-- **Run Suites:** Run the repository's test suites from the root (e.g., `npm run test` or standard test scripts).
-- **Pass Rate:** A **100% pass rate** is mandatory. Any failing test must be resolved before committing.
-- **Syntax & Linting:** Code must compile without errors and satisfy all static code analysis (eslint/linter) requirements.
+- **Runtime Verification Mandate:** In accordance with the global `AGENTS.md` mandate, static AST parsing, linter checks, or syntax inspection alone are strictly invalid for verification. All test suites, scripts, and modified runtime paths must be actively executed in the real runtime environment.
+- **Run Suites:** Run the repository's test suites from the root (e.g., `npm run test`, `dotnet test`, or standard project test scripts).
+- **Pass Rate:** A **100% pass rate** is mandatory. Any failing test must be resolved before committing or merging.
+- **Syntax & Linting:** Code must compile cleanly without errors and satisfy all static code analysis requirements in addition to passing runtime tests.
 
 ---
 
