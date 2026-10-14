@@ -95,7 +95,7 @@ Audit and verify the plan using `/plan-review`.
 
 ### Stage 4: Comprehensive Runtime Verification & Quality Gate
 > [!CAUTION]
-> **Runtime Verification Mandate:** Static AST parsing, linter checks, or syntax validation alone are **strictly insufficient** to claim a script or feature works.
+> **Runtime Verification Mandate:** As established in the global `AGENTS.md` foundation mandates, static AST parsing, linter checks, or syntax validation alone are **strictly insufficient** to claim a script or feature works. Real execution in the runtime environment is required.
 
 1. **Real Execution**:
    - For scripts: Execute the script in a test harness or dry-run and verify the actual exit code and console behavior.

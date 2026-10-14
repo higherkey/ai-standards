@@ -39,8 +39,10 @@ Review all staged and unstaged changes (`git diff`):
 - **Adversarial Subagent Audit:** For non-trivial diffs (> 3 files), dispatch an adversarial auditor using `/subagent-delegate-on-rails` to eliminate author confirmation bias and preserve parent context memory.
 
 ### 3. Build & Test Pass Gate
+- **Runtime Verification Mandate:** Per the global `AGENTS.md` foundation mandate, static AST parsing, linter checks, or dry syntax validation alone are strictly prohibited from being used to claim verification. Every script, build, or feature modification must be executed and validated in the real runtime environment.
 - Run the project's build command (`npm run build`, `dotnet build`, etc.) to guarantee zero compilation errors or compiler warnings.
 - Run the full test suite (`npm test`, `dotnet test`, etc.). **100% pass rate is mandatory.** Flaky tests must be quarantined or fixed before sign-off.
+- Verify that any manual steps that could not be executed autonomously are documented in the PR checklist.
 
 ### 4. SonarCloud & Static Analysis Gate
 - Verify SonarCloud quality gate compliance (or run local linters if offline).
