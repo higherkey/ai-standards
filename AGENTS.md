@@ -32,7 +32,7 @@ These instructions provide a baseline for AI agent behavior across all projects 
 - **Standards:** All commits and PR titles **MUST** follow **Conventional Commits** (e.g., `feat:`, `fix:`) and use **Imperative Tense** (e.g., `Update`, not `Updated`) for the **entire message** (header and body).
 - **Issue Reference:** Link GitHub Issues with `#123` or `fixes #123` where applicable.
 - **Branch Notes:** Maintain a running branch notes document in `/docs/branch-notes/` for all **prefixed branches** (e.g. `feat/`, `fix/`, `chore/`). Track Discoveries, 4a Blockers, 4b Quick Wins, and 4c Deferred Items.
-- **Check-in Cadence:** Run local verification first, then present 4a/4b/4c items at plan chunk milestones and the Pre-Commit Gate before committing.
+- **Check-in Cadence:** Run local runtime verification first (real execution; AST/syntax checks alone are invalid), then present 4a/4b/4c items at plan chunk milestones and the Pre-Commit Gate before committing.
 - **Local Exclusions (Contribution Mode):** In contribution mode (external repos), configure local exclusions in `.git/info/exclude` for branch notes and task files (e.g., `/docs/branch-notes/`, `/task.md`, `/walkthrough.md`) to avoid committing local work artifacts.
 
 ### GitHub & Issue Management (CLI/REST API)
