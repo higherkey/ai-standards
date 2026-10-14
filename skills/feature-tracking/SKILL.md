@@ -59,7 +59,7 @@ The agent MUST present the status of all `4a`, `4b`, and `4c` items and check in
 1. **Staged Plan Milestones / Work Chunks**:
    - If an implementation plan has distinct phases or chunks, check in after completing a chunk to report progress and present newly discovered 4a/b/c items before starting the next chunk.
 2. **Pre-Commit Quality Gate (Primary Triage Checkpoint)**:
-   - **Local Verification First**: Run all local builds and automated test suites (`dotnet test`, `npm test`, etc.) to verify everything is 100% green.
+   - **Runtime Verification Mandate**: Static-only approvals (such as AST syntax checks or dry parsers) are strictly eliminated. All builds, scripts, and automated test suites (`dotnet test`, `npm test`, real runtime execution) must be actively executed and verified 100% green before presenting the gate. If any test step requires manual execution, it must be explicitly surfaced.
    - **User Check-in**: Present 4a/b/c status to the user:
      - Report which 4b quick wins were included.
      - Review 4c deferred items and offer to create GitHub issues with estimates/labels.
