@@ -61,10 +61,15 @@ try {
 
   // Test 5: Postinstall error safety
   console.log('Testing postinstall fail-safe...');
-  // Passing an invalid write path should fail normally (exit code 1)
+  // Passing an invalid write path (e.g. attempting to create a directory inside an existing file)
+  // should fail deterministically across all OS environments
+  const blockingFilePath = path.join(tempProjectDir, 'blocking-file');
+  fs.writeFileSync(blockingFilePath, 'file content');
+  const invalidTarget = path.join(blockingFilePath, 'cannot_be_directory');
+
   let failedNormally = false;
   try {
-    execSync('node bin/cli.js --target "Z:\\invalid_drive_non_existent\\path"', { stdio: 'ignore' });
+    execSync(`node bin/cli.js --target "${invalidTarget}"`, { stdio: 'ignore' });
   } catch (error) {
     failedNormally = true;
   }
@@ -76,7 +81,7 @@ try {
   // Under postinstall lifecycle, it should warn and exit with 0 (no exception thrown by execSync)
   let postinstallSucceeded = false;
   try {
-    execSync('node bin/cli.js --target "Z:\\invalid_drive_non_existent\\path"', {
+    execSync(`node bin/cli.js --target "${invalidTarget}"`, {
       env: { ...process.env, npm_lifecycle_event: 'postinstall' },
       stdio: 'ignore'
     });

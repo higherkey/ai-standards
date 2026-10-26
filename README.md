@@ -38,11 +38,19 @@ This repository contains the centralized source of truth (SSOT) for personal AI 
 
 ## 1. Setup in Projects You Own/Lead
 
-### Option A: NPM Package (Recommended for Node Projects)
-1. **Install the package:**
+### Option A: NPM Package via GitHub Packages (Recommended for Node Projects)
+1. **Configure npm registry for `@higherkey` scope:**
+   Add a `.npmrc` file at the root of your project:
+   ```ini
+   @higherkey:registry=https://npm.pkg.github.com
+   ```
+   *(Note: Since `@higherkey/ai-standards` is a public package, downloading does not require private auth tokens).*
+
+2. **Install the package:**
    ```bash
    npm install --save-dev @higherkey/ai-standards
    ```
+   *(Alternative without .npmrc: `npm install --save-dev github:higherkey/ai-standards#v0.3.0`)*
 2. **Configure scripts** in your `package.json` to automate rules updates on installation:
    ```json
    "scripts": {
