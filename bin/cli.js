@@ -44,7 +44,8 @@ Best Practices:
     Projects you own: commit the installed files so teammates and CI get the
     same standards.
     Contribution mode (repos you don't own): exclude only the managed paths in
-    .git/info/exclude or a global .gitignore. Never exclude all of .claude/,
+    that clone's .git/info/exclude. Not a global excludes file: it would also
+    hide branch notes in projects you own. Never exclude all of .claude/,
     which also holds your own settings:
       /.agents/
       /.claude/skills/

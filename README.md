@@ -120,13 +120,13 @@ npx ai-standards-sync --agent all --yes
 
 If you are contributing to an external codebase and want to use these workflows without polluting the repository:
 1. Run the sync as above (or maintain the skills globally on your machine).
-2. Exclude only the managed paths from `git status` without editing the repo's `.gitignore`, using `.git/info/exclude` (per clone) or a global excludes file.
+2. Exclude only the managed paths from `git status` without editing the repo's `.gitignore`, using that clone's `.git/info/exclude`.
 
-#### Global Gitignore Setup
-```bash
-git config --global core.excludesfile ~/.gitignore_global
-```
-Add the following lines to `~/.gitignore_global` (or to `.git/info/exclude`):
+> [!WARNING]
+> Do not put these paths in a global excludes file (`core.excludesfile`). A global entry also applies to projects you own, where branch notes must be committed. `git add -A` then silently skips them, and the branch-notes PR check fails.
+
+#### Per-Clone Exclude Setup
+Add the following lines to `.git/info/exclude` in each external clone:
 ```text
 /.agents/
 /.claude/skills/
