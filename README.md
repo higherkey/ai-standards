@@ -120,15 +120,15 @@ npx ai-standards-sync --agent all --yes
 
 If you are contributing to an external codebase and want to use these workflows without polluting the repository:
 1. Run the sync as above (or maintain the skills globally on your machine).
-2. Exclude only the managed paths from `git status` without editing the repo's `.gitignore`. Use one of these:
-   - **Global (recommended):** a global excludes file protects every external clone automatically. Repos you own then opt back in, as described below.
-   - **Per clone:** add the paths to that clone's `.git/info/exclude`.
+2. Exclude the managed paths in that clone's `.git/info/exclude`. This keeps them out of `git status` without touching the repo's `.gitignore`.
 
-#### Global Excludes Setup
-```bash
-git config --global core.excludesfile ~/.gitignore_global
-```
-Add the managed paths you never want committed to someone else's repo to `~/.gitignore_global`:
+Branch notes are committed by default. Exclude them only in repos owned by someone else. For a repo where you are a primary contributor, decide per repo with the owner: if they want your branch notes in history, skip the exclude for that clone.
+
+> [!WARNING]
+> Don't put these paths in a global excludes file (`core.excludesfile`). A global entry applies to every repo, including your own. There, `git add -A` silently skips branch notes and the branch-notes PR check fails.
+
+#### Per-Clone Exclude Setup
+Add these lines to `.git/info/exclude` in each external clone:
 ```text
 /.agents/
 /.claude/skills/
@@ -140,20 +140,7 @@ Add the managed paths you never want committed to someone else's repo to `~/.git
 /task.md
 /walkthrough.md
 ```
-Never exclude all of `.claude/`, since it holds your own settings.
-
-#### Opting Back In for Projects You Own
-A global excludes entry also applies to projects you own, where branch notes must be committed. Without an override, `git add -A` silently skips them and the branch-notes PR check fails. A repo's committed `.gitignore` takes precedence over the global file, so re-include the paths there with negations:
-```text
-!/docs/branch-notes/
-!/.agents/
-!/.claude/skills/
-!/.claude/agents/
-!/.claude/rules/ai-standards.md
-!/.claude/.ai-standards-manifest.json
-!/.ai-standards.json
-```
-Keep only the lines for paths your global file excludes and you want committed. Leave scratch files like `task.md` and `walkthrough.md` ignored. Verify with `git check-ignore -v docs/branch-notes/x-notes.md`: no output means the path will be committed.
+Never exclude all of `.claude/`, since it holds your own settings. To check a path, run `git check-ignore -v docs/branch-notes/x-notes.md`; no output means it will be committed.
 
 ---
 

@@ -43,10 +43,9 @@ Best Practices:
   Git hygiene:
     Projects you own: commit the installed files so teammates and CI get the
     same standards.
-    Contribution mode (repos you don't own): exclude only the managed paths in
-    a global excludes file (core.excludesfile) or that clone's
-    .git/info/exclude. If you use a global file, re-include the paths in each
-    owned repo's .gitignore (e.g. !/docs/branch-notes/).
+    Contribution mode (repos owned by someone else): exclude only the managed
+    paths in that clone's .git/info/exclude. Not a global excludes file: it
+    would also hide branch notes in your own repos.
     Never exclude all of .claude/, which also holds your own settings:
       /.agents/
       /.claude/skills/
