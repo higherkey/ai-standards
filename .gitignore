@@ -1,0 +1,3 @@
+# Owned project: re-include branch notes that a global excludes file
+# (core.excludesfile) hides to protect repos you only contribute to.
+!/docs/branch-notes/

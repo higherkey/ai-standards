@@ -9,7 +9,7 @@ Issue: #12
 - Implementation delegated to two Sonnet medium-effort subagents (CLI vs content, disjoint files); Opus reviewed.
 - Review fix: the interactive prompt saved `.ai-standards.json` before the `all` confirmation; it now saves only after confirming.
 - `all` inside `.ai-standards.json` is treated as standing consent (no confirmation on each sync).
-- CI caught that the README's suggested global excludes file (`/docs/branch-notes/`) silently kept this notes file out of the commit. README and `--help` now recommend per-clone `.git/info/exclude` only.
+- CI caught that the README's suggested global excludes file (`/docs/branch-notes/`) silently kept this notes file out of the commit. Resolution: keep the global excludes as the safety net for contributing repos. Owned repos re-include paths with `.gitignore` negations; this repo commits `!/docs/branch-notes/`. README and `--help` document the pattern.
 
 ## 2. Blockers & Risks (4a)
 - Antigravity runtime can't be exercised here; skill edits and the `disable-model-invocation` key need a manual check there.
