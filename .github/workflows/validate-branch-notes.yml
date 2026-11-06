@@ -1,0 +1,46 @@
+name: Validate Branch Notes
+
+on:
+  workflow_call:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  validate-branch-notes:
+    name: Check for Branch Notes Document
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check for branch notes document
+        env:
+          BRANCH: ${{ github.head_ref }}
+        run: |
+          echo "PR branch: $BRANCH"
+
+          # Check if the branch has a conventional prefix
+          if echo "$BRANCH" | grep -qE '^(feat|fix|chore|refactor|docs|test|perf|build|ci|style)/'; then
+            # Normalize branch name: replace / and _ and spaces with -
+            NORMALIZED_NAME=$(echo "$BRANCH" | sed 's/[/_ ]/-/g')
+            NOTES_PATH="docs/branch-notes/${NORMALIZED_NAME}-notes.md"
+            echo "Expected branch notes: $NOTES_PATH"
+
+            if [ -f "$NOTES_PATH" ]; then
+              echo "Branch notes document found: $NOTES_PATH"
+            else
+              echo ""
+              echo "MISSING BRANCH NOTES DOCUMENT"
+              echo "Branch '$BRANCH' is a prefixed branch but no branch notes document was found."
+              echo "Expected: $NOTES_PATH"
+              echo ""
+              echo "Create the branch notes document before opening this PR."
+              echo "See skills/feature-tracking/SKILL.md for instructions."
+              exit 1
+            fi
+          else
+            echo "Branch '$BRANCH' has no conventional prefix. Branch notes not required."
+          fi

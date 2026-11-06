@@ -1,6 +1,6 @@
 ---
 name: api-and-interface-design-slim
-description: "API design and contract standards: RFC 7807 error models, idempotency, boundary validation, and backward compatibility"
+description: "API design and contract standards: RFC 7807 error models, idempotency, boundary validation, and backward compatibility. Use when designing or changing HTTP/RPC endpoints, error responses, or module contracts."
 ---
 
 # API & Interface Design (`/api-and-interface-design-slim`)

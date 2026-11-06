@@ -1,6 +1,6 @@
 ---
 name: peer-review-with-quality
-description: "Senior code review, quality gate verification, accessibility audit, SonarCloud compliance, and trace reconciliation before commit or PR"
+description: "Senior code review, quality gate verification, accessibility audit, SonarCloud compliance, and branch notes reconciliation before commit or PR. Use when preparing to commit or open a PR and a senior quality review gate is needed."
 ---
 
 # Senior Peer Review with Quality Gates (`/peer-review-with-quality`)
@@ -21,8 +21,8 @@ Identify the domains touched by the active changes and trigger their specialized
 
 - **Frontend / UI:** Run `/frontend-ui-engineering-slim` and `/accessibility-and-a11y-slim` audits.
   - Verify zero `!important` tags and zero inline styles (`style="..."`).
-  - Verify keyboard focusability, ARIA labels on icon buttons, and color contrast $\ge 4.5:1$.
-  - Verify touch targets are $\ge 44 \times 44\text{px}$.
+  - Verify keyboard focusability, ARIA labels on icon buttons, and color contrast >= 4.5:1.
+  - Verify touch targets are >= 44 x 44px.
 - **Backend / APIs:** Run `/api-and-interface-design-slim` and `/security-and-hardening-slim` audits.
   - Verify query parameterization (prevent SQLi) and safe encoding (prevent XSS).
   - Verify RFC 7807 problem details error shapes and backward compatibility.
@@ -36,7 +36,7 @@ Review all staged and unstaged changes (`git diff`):
 - **Minimal Surface Area:** Ensure only necessary lines were touched. Discard accidental formatting diffs, unintended deletions, or whitespace churn.
 - **Clean Hygiene:** No dead code, debug statements (`console.log`, `debugger`), or orphaned temporary files.
 - **Convention Adherence:** Adheres to SOLID, DRY, and project-specific architecture patterns.
-- **Adversarial Subagent Audit:** For non-trivial diffs (> 3 files), dispatch an adversarial auditor using `/subagent-delegate-on-rails` to eliminate author confirmation bias and preserve parent context memory.
+- **Adversarial Subagent Audit:** For non-trivial diffs (> 3 files), dispatch an adversarial auditor (Archetype A in `/subagent-delegate-on-rails`) to eliminate author confirmation bias and preserve parent context memory.
 
 ### 3. Build & Test Pass Gate
 - **Runtime Verification Mandate:** Per the global `AGENTS.md` foundation mandate, static AST parsing, linter checks, or dry syntax validation alone are strictly prohibited from being used to claim verification. Every script, build, or feature modification must be executed and validated in the real runtime environment.
@@ -48,12 +48,12 @@ Review all staged and unstaged changes (`git diff`):
 - Verify SonarCloud quality gate compliance (or run local linters if offline).
 - Zero new Blocker, Critical, or Major code smells / security vulnerabilities.
 - For deferred items, file a follow-up GitHub issue using non-interactive CLI flags:
-  ```powershell
+  ```bash
   gh issue create --title "[Technical Debt] Short summary" --body "Finding details"
   ```
 
-### 5. Trace Reconciliation & Git Preparation
-- If working on a prefixed branch, run `/trace-consolidate` on `/docs/traces/[branch]-work-trace.md`.
+### 5. Branch Notes Reconciliation & Git Preparation
+- If working on a prefixed branch, run `/consolidate-branch-notes` on `/docs/branch-notes/[normalized-branch]-notes.md` before committing.
 - Compare actual modified files against Planned Work (`git diff --name-only <target-branch>`).
 - Format proposed commit message using Conventional Commits and Imperative Tense:
   `feat: <concise summary>` or `fix: <concise summary>`.

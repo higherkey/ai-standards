@@ -1,0 +1,57 @@
+name: Clean Branch Notes
+on:
+  workflow_call:
+    inputs:
+      base-branch:
+        description: 'The base branch to push cleanup to (e.g. main)'
+        required: false
+        default: 'main'
+        type: string
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.base-branch }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Delete Branch Notes Files
+        run: |
+          if [ -d "docs/branch-notes" ]; then
+            echo "Checking for branch notes files to delete..."
+            find docs/branch-notes -name "*-notes.md" -type f -delete
+            if [ -z "$(ls -A docs/branch-notes 2>/dev/null)" ]; then
+              rm -rf docs/branch-notes
+              echo "Deleted empty docs/branch-notes directory."
+            fi
+          fi
+
+          # Migration aid: remove leftover legacy trace files
+          if [ -d "docs/traces" ]; then
+            echo "Checking for legacy trace files to delete..."
+            find docs/traces -name "*-work-trace.md" -type f -delete
+            if [ -z "$(ls -A docs/traces 2>/dev/null)" ]; then
+              rm -rf docs/traces
+              echo "Deleted empty docs/traces directory."
+            fi
+          fi
+
+      - name: Commit and Push Cleanup
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add -A docs/ || true
+
+          if ! git diff --cached --exit-code --quiet; then
+            git commit -m "chore: Clean up AI branch notes [skip ci]"
+            git push origin ${{ inputs.base-branch }}
+            echo "Changes committed and pushed successfully."
+          else
+            echo "No branch notes files found to clean up."
+          fi

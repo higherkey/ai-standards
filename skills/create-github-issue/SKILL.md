@@ -1,6 +1,6 @@
 ---
 name: create-github-issue
-description: "Procedures and best practices for creating GitHub Issues with project boards and estimates"
+description: "Procedures and best practices for creating GitHub Issues with project boards and estimates. Use when asked to file, draft, or create a GitHub issue."
 ---
 
 # Creating GitHub Issues (`/create-github-issue`)
@@ -14,7 +14,7 @@ Before creating a new issue, verify if there are any repository-specific require
 - Check `.github/ISSUE_TEMPLATE/` for specific formats.
 - Check `.github/CONTRIBUTING.md` if it exists.
 - Search for existing issues to avoid duplicates:
-  ```powershell
+  ```bash
   gh issue list --search "<keyword>"
   ```
 
@@ -43,12 +43,12 @@ Where project boards are enabled, ensure the issue has proper categorization:
 For properties not supported by basic `gh issue create` (like complex relationships or specific repository settings), use the **GitHub REST API**:
 
 Example for adding a comment via REST:
-```powershell
+```bash
 gh api -X POST repos/{owner}/{repo}/issues/{issue_number}/comments -f body="Advanced comment via REST"
 ```
 
 Attach a child sub-issue using the REST API:
-```powershell
+```bash
 gh api --method POST "/repos/{owner}/{repo}/issues/{parent_number}/sub_issues" -F sub_issue_id=[CHILD_DATABASE_ID]
 ```
 
@@ -59,6 +59,7 @@ gh api --method POST "/repos/{owner}/{repo}/issues/{parent_number}/sub_issues" -
 2. **Approval**: Wait for explicit user approval before running the creation command.
    - *Exception*: If the user gave explicit "proceed" permission in the initial request, create it immediately.
 3. **Create**: Execute `gh issue create` using non-interactive flags:
-   ```powershell
+   ```bash
    gh issue create --title "feat: <title>" --body "<markdown-body>" --label "<labels>"
    ```
+   For multi-line bodies, write the body to a file and use `--body-file issue-body.md` instead of embedding newlines (works identically in PowerShell and Bash). The `gh` commands above are shell-agnostic; in PowerShell, quote API paths containing `{owner}`/`{repo}`.

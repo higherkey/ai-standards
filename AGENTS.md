@@ -8,9 +8,9 @@
   2. It is impossible for the agent (e.g. interactive browser SSO/MFA, physical hardware manipulation, or entering secrets/passwords).
 
 ## Metacognitive Allowances, Heuristics Over Examples, & Conflict Resolution
-- **Heuristics Over Rigid Examples:** Rules, workflows, and skills express principles and heuristic frameworks. Concrete examples (such as specific model names like `flash` or `flash_lite`, named tool sequences, or enumerated work archetypes) are illustrative reference points, never exhaustive or restrictive boundaries. Never treat an illustrative example as an absolute constraint unless explicitly prefixed with MUST or NEVER.
+- **Heuristics Over Rigid Examples:** Rules, workflows, and skills express principles and heuristic frameworks. Concrete examples (such as model tier names like fast, standard, or deep, named tool sequences, or enumerated work archetypes) are illustrative reference points, never exhaustive or restrictive boundaries. Never treat an illustrative example as an absolute constraint unless explicitly prefixed with MUST or NEVER.
 - **Metacognitive Dynamic Scaling:** Agents possess full autonomy to evaluate task complexity, context pressure, and domain stakes dynamically:
-  - *Model-Tier & Resource Selection:* Autonomously decide whether a task can be delegated to the cheapest suitable tier (e.g. `flash_lite` for mechanical search/syntax checks, `flash` for focused audits/edits), needs a higher-capability model tier (`pro`), or should be executed directly by the parent agent to eliminate delegation overhead.
+  - *Model-Tier & Resource Selection:* Autonomously decide whether a task can be delegated to the cheapest suitable tier (the fast tier for mechanical search/syntax checks, the standard tier for focused audits/edits), needs a higher-capability model tier (deep), or should be executed directly by the parent agent to eliminate delegation overhead.
   - *Archetype Flexibility:* Adapt, customize, or synthesize new work archetypes beyond standard templates whenever a problem warrants a specialized operational posture.
   - *Skill Invocation Autonomy:* Dynamically identify, chain, or omit domain skills based on actual project context rather than mechanical checklist compliance.
 - **Principled Conflict & Gap Resolution:** When rules appear to conflict or when operating in unguided edge cases:
@@ -20,15 +20,15 @@
 
 ---
 
-# Global Foundation Mandates (Antigravity)
+# Global Foundation Mandates
 
-These instructions provide a baseline for AI agent behavior across all projects and conversations on this machine.
+These instructions provide a baseline for AI agent behavior across all projects and conversations, regardless of which AI coding tool is used.
 
 ## 1. General Development Workflows
 
-### Git & Source Control (Windows/PowerShell)
+### Git & Source Control
 - **Commits:** Prefer `git commit -am "message"` for modified tracked files. Use `git add` explicitly for new files.
-- **PowerShell Chaining:** NEVER use `&&` to chain commands. Always use `;` (Windows compatible).
+- **PowerShell Chaining:** In Windows PowerShell 5.1, NEVER use `&&` to chain commands. Use `;` instead. In Bash, PowerShell 7+, and other shells, `&&` is fine.
 - **Standards:** All commits and PR titles **MUST** follow **Conventional Commits** (e.g., `feat:`, `fix:`) and use **Imperative Tense** (e.g., `Update`, not `Updated`) for the **entire message** (header and body).
 - **Issue Reference:** Link GitHub Issues with `#123` or `fixes #123` where applicable.
 - **Branch Notes:** Maintain a running branch notes document in `/docs/branch-notes/` for all **prefixed branches** (e.g. `feat/`, `fix/`, `chore/`). Track Discoveries, 4a Blockers, 4b Quick Wins, and 4c Deferred Items.
@@ -49,11 +49,11 @@ These instructions provide a baseline for AI agent behavior across all projects 
 
 ## 2. Global Engineering Standards
 
-- **Surgical Edits:** Prioritize targeted `replace` calls over full-file rewrites to maintain file integrity and minimize unnecessary diffs.
+- **Surgical Edits:** Prioritize targeted edits over full-file rewrites to maintain file integrity and minimize unnecessary diffs.
 - **Validation:** Every code change requires verification (build/test) and a systematic check to identify and fix any **errors, false assumptions, or missed opportunities**.
 - **Plan Review:** Audit and verify proposed implementation plans using the `/plan-review` checklist before beginning any code modifications (or when not working on code directly) to ensure all constraints, **errors, false assumptions, or missed opportunities** are addressed before execution.
 - **Design Review:** For design-focused tasks (layout, copy, aesthetics, accessibility, or styling consistency), execute the `/design-review` skill to systematically check for errors or styling gaps.
-- **Workflows:** Utilize standardized skills in `~/.gemini/config/skills/` (e.g., `/resolve-issue`, `/plan-review`, `/design-review`, `/feature-tracking`, `/peer-review-with-quality`), when preparing a commit, or after major milestones. Avoid running check workflows on minor intermediate steps.
+- **Workflows:** Utilize standardized skills in the installed skills directory (e.g., `/resolve-issue`, `/plan-review`, `/design-review`, `/feature-tracking`, `/peer-review-with-quality`), when preparing a commit, or after major milestones. Avoid running check workflows on minor intermediate steps.
 - **Terminal Gate Clarity:** When starting issue resolution, immediately clarify at Step 0 whether the delivery gate is a Pull Request or Merge into `dev`. If ambiguous, ask the user on Turn 1 before deep implementation.
 - **Runtime Verification Mandate:** Static AST parsing or syntax checks alone are NEVER sufficient to claim verification. Every script, build, or feature modification must be executed and validated in the real runtime environment before proposing or executing a merge.
 - **Upfront Manual Step Disclosure:** Agents must explicitly identify automated tests vs. required manual steps during planning. Any step that cannot be autonomously executed must be surfaced immediately in the plan and documented in the PR checklist.
@@ -77,5 +77,5 @@ These instructions provide a baseline for AI agent behavior across all projects 
 - **Core Skill Brevity:** Keep core workflow instruction files (`SKILL.md`) compact and under 250 lines. Offload long checklists, extensive examples, templates, or references to subdirectories so they are read dynamically when needed rather than loaded by default.
 - **Selective Rules:** Keep rules lean and focused on broad principles. Avoid embedding verbose, file-by-file or project-specific checklists in global rules.
 - **Surgical Edits:** Always prefer target-specific edits over writing scripts or outputting entire files, minimizing both read and write token costs.
-- **Zero-Token Background Polling:** Never poll external asynchronous status (e.g., CI/CD runs, container builds, deployment health, or server boots) using repetitive conversational tool calls or short sleeps across conversational turns. Instead, execute a single self-terminating background wait loop within a script/CLI command (e.g., a PowerShell loop with internal Start-Sleep or native --watch / --tail flags) that completes when a terminal state is reached. Rely on the reactive task wakeup system to resume execution without consuming model context or conversational turns.
+- **Zero-Token Background Polling:** Never poll external asynchronous status (e.g., CI/CD runs, container builds, deployment health, or server boots) using repetitive conversational tool calls or short sleeps across conversational turns. Instead, execute a single self-terminating background wait loop within a script/CLI command (e.g., a shell loop with an internal sleep, or native --watch / --tail flags) that completes when a terminal state is reached. Rely on the host tool's background-task or wakeup mechanism to resume execution without consuming model context or conversational turns.
 - **Branch Notes Optimization:** Keep branch notes documents short, focused on delta discoveries and 4a/4b/4c items, eliminating redundant checklists and high-token rewrites.

@@ -1,6 +1,6 @@
 ---
 name: ci-cd-and-automation-slim
-description: "Pipeline automation standards: shift-left quality gates, non-interactive execution invariants, reusable actions, and SemVer release trains"
+description: "Pipeline automation standards: shift-left quality gates, non-interactive execution invariants, reusable actions, and SemVer release trains. Use when writing or editing CI/CD pipelines, GitHub Actions workflows, or release automation."
 ---
 
 # CI/CD and Automation (`/ci-cd-and-automation-slim`)
@@ -31,23 +31,23 @@ PR Open ──> 1. Lint / Format ──> 2. Type Check ──> 3. Unit Tests ─
 
 1. **Static Analysis & Formatting:** `eslint`, `prettier --check`, `dotnet format --verify-no-changes`.
 2. **Type Compilation:** `tsc --noEmit`, `dotnet build --no-incremental`.
-3. **Automated Unit Testing:** Full test execution with coverage enforcement (target $\ge 80\%$, zero ignored failures).
+3. **Automated Unit Testing:** Full test execution with coverage enforcement (target >= 80%, zero ignored failures).
 4. **Bundle & Compilation:** Production build artifact creation (`npm run build`).
 5. **Quality & Security Scan:** SonarCloud Quality Gate verification and dependency vulnerability auditing (`npm audit --audit-level=high`).
 
 ---
 
-## 3. Work Trace Integration
+## 3. Branch Notes Integration
 
 For repositories using `/feature-tracking`:
-- **Trace Validation:** Include a PR check (`validate-trace.yml`) ensuring a work trace document exists under `/docs/traces/` for all conventional prefixed branches (`feat/`, `fix/`, etc.).
-- **Automatic Pruning:** Include a merge-triggered action (`clean-traces.yml`) to automatically delete `/docs/traces/*.md` and commit the cleanup when merging into `main`.
+- **Branch Notes Validation:** Include a PR check (`validate-branch-notes.yml`) ensuring a branch notes document exists at `/docs/branch-notes/<normalized-branch>-notes.md` for all conventional prefixed branches (`feat/`, `fix/`, etc.).
+- **Automatic Pruning:** Include a merge-triggered action (`clean-branch-notes.yml`) to automatically delete `/docs/branch-notes/*.md` and commit the cleanup when merging into `main`.
 
 ---
 
 ## 4. Release Trains & Versioning
 
-- **SemVer Compliance:** Tag releases automatically using Semantic Versioning (`MAJOR.MINOR.PATCH`) derived from conventional commits (`fix:` $\rightarrow$ patch, `feat:` $\rightarrow$ minor, `BREAKING CHANGE:` $\rightarrow$ major).
+- **SemVer Compliance:** Tag releases automatically using Semantic Versioning (`MAJOR.MINOR.PATCH`) derived from conventional commits (`fix:` -> patch, `feat:` -> minor, `BREAKING CHANGE:` -> major).
 - **Artifact Immortality:** Release artifacts (Docker containers, npm packages, static bundles) must be immutable and digest-pinned (`sha256`).
 
 ---
@@ -56,6 +56,6 @@ For repositories using `/feature-tracking`:
 
 - [ ] All runner commands use explicit non-interactive flags.
 - [ ] GITHUB_TOKEN permissions are scoped to least privilege.
-- [ ] Pipeline sequence: Lint $\rightarrow$ Types $\rightarrow$ Tests $\rightarrow$ Build $\rightarrow$ Security.
+- [ ] Pipeline sequence: Lint -> Types -> Tests -> Build -> Security.
 - [ ] Secrets are referenced via `${{ secrets.NAME }}` and never echoed in scripts.
-- [ ] Trace validation and cleanup workflows are configured.
+- [ ] Branch notes validation and cleanup workflows are configured.

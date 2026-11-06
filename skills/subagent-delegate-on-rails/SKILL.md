@@ -1,6 +1,6 @@
 ---
 name: subagent-delegate-on-rails
-description: "Universal task decomposition and dispatch engine for executing work through token-efficient, low-reasoning Flash subagents with strict rails"
+description: "Universal task decomposition and dispatch engine for executing work through token-efficient, low-reasoning subagents with strict rails. Use when deciding whether and how to delegate work to subagents."
 ---
 
 # Subagent Delegate on Rails (`/subagent-delegate-on-rails`)
@@ -17,19 +17,30 @@ Before dispatching a subagent, evaluate the task against this decision matrix:
 Task Assessment
 ├─ Small (< 30 lines, 1 file, mechanical replace) ──> EXECUTE DIRECTLY IN PARENT
 └─ Bounded / High-Footprint / Exploratory ──────────> DELEGATE TO TIGHT-RAILS SUBAGENT
-    ├─ Mechanical search / grep / syntax checks ───> Model: flash_lite
-    ├─ Code edits / test writing / deep audit ─────> Model: flash (default)
-    └─ Complex multi-file architectural planning ──> Model: pro (rare, bounded)
+    ├─ Mechanical search / grep / syntax checks ───> Tier: fast
+    ├─ Code edits / test writing / deep audit ─────> Tier: standard (default)
+    └─ Complex multi-file architectural planning ──> Tier: deep (rare, bounded)
 ```
 
-- **Heuristic Primacy:** Model tiers and archetypes below are illustrative guidelines. The parent agent has full metacognitive allowance to adjust model tier, adapt archetypes, or execute directly based on task complexity.
+- **Heuristic Primacy:** Model tiers (fast / standard / deep) and archetypes below are illustrative guidelines. The parent agent has full metacognitive allowance to adjust model tier, adapt archetypes, or execute directly based on task complexity.
 - **Stop-the-Fanout Rule:** Never spawn subagents for trivial edits or single command checks where delegation latency and prompt initialization exceed direct execution cost.
+
+### Tier Mapping
+Skills speak in capability tiers. Map them to the host tool's concrete models:
+
+| Tier | Antigravity | Claude |
+|------|-------------|--------|
+| fast | `flash_lite` | `haiku` |
+| standard | `flash` | `sonnet` |
+| deep | `pro` | `opus` |
+
+On Claude, each archetype below is installed as a named subagent (`rails-*`) with its model and effort preconfigured; dispatch it by name. Doubt-driven development's adversarial reviewer is the auditor archetype (Archetype A).
 
 ---
 
 ## 2. The Four Invariant Dispatch Rails
 
-When invoking `invoke_subagent`, the parent agent MUST enforce these four rails:
+When dispatching a subagent, the parent agent MUST enforce these four rails:
 
 1. **Context Isolation (Artifact + Contract Only):**
    - Provide only the target file paths, git diffs, or isolated code snippets.
@@ -50,7 +61,7 @@ When invoking `invoke_subagent`, the parent agent MUST enforce these four rails:
 
 Agents may instantiate or synthesize variations of these archetypes:
 
-### Archetype A: Adversarial Quality & Security Auditor
+### Archetype A: Adversarial Quality & Security Auditor (Claude agent: `rails-auditor`)
 ```markdown
 Role: Adversarial Code & Security Auditor
 Objective: Audit the target files against specified invariant contracts.
@@ -68,7 +79,7 @@ CONTRACT / INVARIANTS:
 <invariants>
 ```
 
-### Archetype B: Surgical Implementer
+### Archetype B: Surgical Implementer (Claude agent: `rails-implementer`)
 ```markdown
 Role: Surgical Code Implementer
 Objective: Apply the exact remediation described below.
@@ -81,7 +92,7 @@ TARGET: <file>
 INSTRUCTION: <exact change>
 ```
 
-### Archetype C: Performance & Bottleneck Profiler
+### Archetype C: Performance & Bottleneck Profiler (Claude agent: `rails-profiler`)
 ```markdown
 Role: Systems Performance Profiler
 Objective: Investigate hot paths, query performance, memory allocations, or layout stability.
@@ -91,7 +102,7 @@ Rails:
 - No general advice. Concrete bottlenecks and targeted remediations only.
 ```
 
-### Archetype D: Deterministic Test Engineer
+### Archetype D: Deterministic Test Engineer (Claude agent: `rails-test-engineer`)
 ```markdown
 Role: Test Automation Engineer
 Objective: Write isolated, deterministic unit or integration tests for the target component.
@@ -101,7 +112,7 @@ Rails:
 - Output executable test code only.
 ```
 
-### Archetype E: Codebase Explorer & API Contract Researcher
+### Archetype E: Codebase Explorer & API Contract Researcher (Claude agent: `rails-explorer`)
 ```markdown
 Role: Codebase & Contract Researcher
 Objective: Survey unfamiliar APIs, dependencies, or data flows without polluting parent memory.
@@ -117,5 +128,5 @@ Rails:
 Upon receiving subagent output, the parent agent classifies findings according to the `/doubt-driven-development-slim` precedence hierarchy:
 1. **Contract Misread:** Subagent flagged an issue due to ambiguous contract. Refine prompt or resolve.
 2. **Valid & Actionable:** Concrete bug or gap. Implement remediation immediately.
-3. **Valid Trade-off:** Legitimate concern, but intentional trade-off. Document in trace.
+3. **Valid Trade-off:** Legitimate concern, but intentional trade-off. Document in the branch notes.
 4. **Noise:** False positive under context subagent lacked. Dismiss cleanly.

@@ -1,4 +1,6 @@
-name: Clean AI Traces
+name: Clean AI Traces (Deprecated)
+
+# Deprecated: use clean-branch-notes.yml. Kept as a wrapper so existing callers keep working.
 on:
   workflow_call:
     inputs:
@@ -10,48 +12,9 @@ on:
 
 jobs:
   cleanup:
-    runs-on: ubuntu-latest
     permissions:
       contents: write
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.base-branch }}
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Delete Trace and Branch Notes Files
-        run: |
-          if [ -d "docs/branch-notes" ]; then
-            echo "Checking for branch notes files to delete..."
-            find docs/branch-notes -name "*-notes.md" -type f -delete
-            if [ -z "$(ls -A docs/branch-notes 2>/dev/null)" ]; then
-              rm -rf docs/branch-notes
-              echo "Deleted empty docs/branch-notes directory."
-            fi
-          fi
-
-          if [ -d "docs/traces" ]; then
-            echo "Checking for legacy trace files to delete..."
-            find docs/traces -name "*-work-trace.md" -type f -delete
-            if [ -z "$(ls -A docs/traces 2>/dev/null)" ]; then
-              rm -rf docs/traces
-              echo "Deleted empty docs/traces directory."
-            fi
-          fi
-
-      - name: Commit and Push Cleanup
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-          # Stage all deletions first, then check for staged changes
-          git add -A docs/branch-notes/ docs/traces/ docs/ || true
-
-          if ! git diff --cached --exit-code --quiet; then
-            git commit -m "chore: Clean up AI branch notes and traces [skip ci]"
-            git push origin ${{ inputs.base-branch }}
-            echo "Changes committed and pushed successfully."
-          else
-            echo "No trace files found to clean up."
-          fi
+    uses: higherkey/ai-standards/.github/workflows/clean-branch-notes.yml@main
+    with:
+      base-branch: ${{ inputs.base-branch }}
+    secrets: inherit

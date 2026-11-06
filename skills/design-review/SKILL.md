@@ -1,6 +1,6 @@
 ---
 name: design-review
-description: "Audit and verify user interfaces from a design, layout, aesthetics, accessibility, and consistency perspective"
+description: "Audit and verify user interfaces from a design, layout, aesthetics, accessibility, and consistency perspective. Use when reviewing UI layout, styling, copy, or visual consistency."
 ---
 
 # User Interface & Design Review Workflow

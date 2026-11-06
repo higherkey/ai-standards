@@ -1,6 +1,6 @@
 ---
 name: debugging-and-error-recovery-slim
-description: "Root-cause debugging methodology: stop-the-line discipline, falsifiable hypothesis testing, git bisect, and regression guards"
+description: "Root-cause debugging methodology: stop-the-line discipline, falsifiable hypothesis testing, git bisect, and regression guards. Use when a test fails, a build breaks, or unexpected runtime behavior needs root-cause diagnosis."
 ---
 
 # Debugging & Error Recovery (`/debugging-and-error-recovery-slim`)
@@ -36,7 +36,7 @@ Narrow down which layer is failing:
 - **Domain / State:** Incorrect invariant assumptions, null reference exceptions.
 - **Database:** Lock contention, constraint violations, missing migrations.
 - **Regression Discovery:** Use `git bisect` to locate the exact commit where behavior changed:
-  ```powershell
+  ```bash
   git bisect start; git bisect bad HEAD; git bisect good <last-known-good-commit>
   ```
 

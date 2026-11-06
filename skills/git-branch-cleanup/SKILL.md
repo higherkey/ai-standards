@@ -1,6 +1,7 @@
 ---
 name: git-branch-cleanup
-description: "Procedures for cleaning up local branches that have been deleted on the remote"
+description: "Procedures for cleaning up local branches that have been deleted on the remote. Use when asked to prune stale local branches whose remote was deleted."
+disable-model-invocation: true
 ---
 
 # Git Branch Cleanup Workflow (`/git-branch-cleanup`)
@@ -12,7 +13,7 @@ Use this workflow to synchronize your local branch list with the remote, removin
 ## 1. Prune Remote Tracking Branches
 Update local knowledge of the remote state. This removes `origin/branch-name` references that no longer exist on GitHub:
 
-```powershell
+```bash
 git fetch -p
 ```
 
@@ -21,7 +22,7 @@ git fetch -p
 ## 2. Identify "Gone" Branches
 Identify local branches whose upstream tracking branches have been deleted (`[origin/...: gone]`):
 
-```powershell
+```bash
 git branch -vv
 ```
 
@@ -33,8 +34,14 @@ Automatically delete all local branches identified as "gone":
 > [!WARNING]
 > This uses `git branch -D` (force delete). Ensure you don't have unpushed work on these branches that you want to retain.
 
+PowerShell:
 ```powershell
 git branch -vv | Where-Object { $_ -match '\[origin/.*: gone\]' } | ForEach-Object { $branch = $_.Trim().Split(' ')[0]; git branch -D $branch }
+```
+
+Bash:
+```bash
+git branch -vv | awk '/: gone]/ && $1 != "*" {print $1}' | xargs -r git branch -D
 ```
 
 ---
@@ -42,6 +49,6 @@ git branch -vv | Where-Object { $_ -match '\[origin/.*: gone\]' } | ForEach-Obje
 ## 4. Verification
 Verify that only the active local branches remain:
 
-```powershell
+```bash
 git branch
 ```

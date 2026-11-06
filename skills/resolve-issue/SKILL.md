@@ -1,6 +1,6 @@
 ---
 name: resolve-issue
-description: "Goal-driven autonomous issue resolution workflow using an Architect/Subagent pattern with upfront terminal gate triage (PR vs. Merge), runtime verification discipline, manual step disclosure, and quality-gated delivery"
+description: "Goal-driven autonomous issue resolution workflow using an Architect/Subagent pattern with upfront terminal gate triage (PR vs. Merge), runtime verification discipline, manual step disclosure, and quality-gated delivery. Use when asked to fix or resolve a GitHub issue end to end through PR or merge."
 ---
 
 # Issue Resolution Workflow (`/resolve-issue`)
@@ -38,7 +38,7 @@ The primary agent acts as the **Lead Software Architect and Orchestrator**:
 - Verifies all diffs, runtime executions, and quality gates before any commit, PR, or merge.
 
 ### 2. Low-Reasoning Subagents
-Implementation tasks are offloaded to **focused subagents** (using `flash` or `flash_lite` model tier):
+Implementation tasks are offloaded to **focused subagents** (using the fast or standard model tier):
 - Assigned bounded, single-file or single-component objectives.
 - Provided explicit file paths, replacement blocks, and test verification commands.
 - Report completion directly back to the Architect without polluting parent context.
@@ -54,25 +54,25 @@ Before diving into deep file audits, code edits, or subagent dispatching, determ
 - **Run to Merge**: Complete work, verify, open PR, and autonomously merge into integration branch (e.g. `dev`).
 
 > [!IMPORTANT]
-> If the user's intent is ambiguous (e.g., they asked to "fix #123" without specifying PR vs. Merge), **ask the user immediately on Turn 1** (via `ask_question`). Do this right away before the user stands up from their desk or switches screens.
+> If the user's intent is ambiguous (e.g., they asked to "fix #123" without specifying PR vs. Merge), **ask the user immediately on Turn 1**. Do this right away before the user stands up from their desk or switches screens.
 
 ---
 
-### Stage 1: Intake & Trace Setup
+### Stage 1: Intake & Branch Notes Setup
 1. **Fetch Issue Context:**
-   ```powershell
+   ```bash
    gh issue view <issue-id> --json title,body,labels,assignees,milestone
    ```
 2. **Create Prefixed Branch:** Name branch using conventional prefix: `feat/<issue-id>-<slug>`, `fix/<issue-id>-<slug>`, or `chore/<issue-id>-<slug>`.
-   ```powershell
+   ```bash
    git checkout -b fix/<issue-id>-<slug>
    ```
-3. **Initialize Feature Work Trace:**
-   Create `/docs/traces/[branch-name]-work-trace.md` (or `docs/branch-notes/`). Populate planned objectives, target files, and rationale.
+3. **Initialize Branch Notes:**
+   Create `/docs/branch-notes/[normalized-branch-name]-notes.md` per `/feature-tracking`. Populate planned objectives, target files, and rationale.
 
 ---
 
-### Stage 2: Dynamic Skill Selection & Test Strategy in `/plan`
+### Stage 2: Dynamic Skill Selection & Test Strategy in the plan
 Analyze the issue requirements and dynamically activate the relevant specialized skills from the catalog (e.g., `/database-and-migrations-slim`, `/frontend-ui-engineering-slim`, `/security-and-hardening-slim`).
 
 #### Mandatory Test Strategy Breakdown:
@@ -87,7 +87,7 @@ Audit and verify the plan using `/plan-review`.
 
 ### Stage 3: Subagent Execution & Implementation
 1. Decompose the plan into independent implementation chunks.
-2. Follow `/subagent-delegate-on-rails` for metacognitive decomposition, heuristic model tier selection (`flash` / `flash_lite`), and anti-chatter prompt rails.
+2. Follow `/subagent-delegate-on-rails` for metacognitive decomposition, heuristic model tier selection (fast / standard), and anti-chatter prompt rails.
 3. Dispatch focused subagents (`Implementer`, `TestEngineer`, etc.) with Artifact + Contract only.
 4. The Architect verifies and reconciles subagent output against the plan using doubt-driven classification.
 
@@ -112,15 +112,16 @@ Audit and verify the plan using `/plan-review`.
 
 #### Scenario A: Target Gate is "Pull Request (PR)"
 1. Commit changes using Conventional Commits and Imperative Tense:
-   ```powershell
+   ```bash
    git commit -am "fix(scope): resolve issue description (#<issue-id>)"
    ```
-2. Push branch and create Pull Request linking the issue and trace:
-   ```powershell
+2. Run `/consolidate-branch-notes` so the branch notes are reconciled before the PR.
+3. Push branch and create Pull Request linking the issue and branch notes. Write the PR body to `pr-body.md` (containing `Closes #<issue-id>`, a `### Manual Verification Required` checklist, and a link to the branch notes), then:
+   ```bash
    git push -u origin <branch-name>
-   gh pr create --title "fix(scope): <title> (#<issue-id>)" --body "Closes #<issue-id>`n`n### Manual Verification Required`n- [ ] List any remaining manual steps"
+   gh pr create --title "fix(scope): <title> (#<issue-id>)" --body-file pr-body.md
    ```
-3. If uncompleted manual steps remain, explicitly alert the user in chat.
+4. If uncompleted manual steps remain, explicitly alert the user in chat.
 
 #### Scenario B: Fast-Forward to PR (User asked to run straight to PR without planning turn)
 - Complete all automatable implementation and verification steps.

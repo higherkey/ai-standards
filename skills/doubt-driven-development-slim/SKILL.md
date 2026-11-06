@@ -1,6 +1,6 @@
 ---
 name: doubt-driven-development-slim
-description: "Adversarial review cycle for non-trivial decisions, state mutations, and boundary crossings before code stands"
+description: "Adversarial review cycle for non-trivial decisions, state mutations, and boundary crossings before code stands. Use when making non-trivial decisions involving concurrency, state mutation, boundaries, or high blast radius."
 ---
 
 # Doubt-Driven Development (`/doubt-driven-development-slim`)
@@ -41,7 +41,7 @@ Extract only what the reviewer needs to evaluate:
 - **Rule:** Never pass the author's justification or the CLAIM block. Handing over conclusions biases the reviewer toward agreement.
 
 ### 3. DOUBT — Adversarial Review Prompt
-Invoke a fresh-context reviewer or subagent (`invoke_subagent` with `flash` model) with an explicitly adversarial posture:
+Dispatch a fresh-context reviewer (the auditor archetype from `/subagent-delegate-on-rails`, standard tier) with an explicitly adversarial posture:
 
 ```markdown
 Adversarial Review: Find what is wrong with this artifact.
@@ -89,5 +89,5 @@ Halt the cycle when:
 - [ ] Decision was explicitly named as a concise CLAIM.
 - [ ] Reviewer received ARTIFACT + CONTRACT only (no reasoning).
 - [ ] Adversarial prompt was used.
-- [ ] Findings classified by precedence (Misread $\rightarrow$ Actionable $\rightarrow$ Trade-off $\rightarrow$ Noise).
-- [ ] Stop condition reached within $\le 3$ cycles.
+- [ ] Findings classified by precedence (Misread -> Actionable -> Trade-off -> Noise).
+- [ ] Stop condition reached within <= 3 cycles.

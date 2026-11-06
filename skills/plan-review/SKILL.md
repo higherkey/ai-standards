@@ -1,6 +1,6 @@
 ---
 name: plan-review
-description: "Audit and verify an Implementation Plan or architectural strategy with dynamic skill selection before code execution"
+description: "Audit and verify an Implementation Plan or architectural strategy with dynamic skill selection before code execution. Use when an implementation plan or strategy needs auditing before any code is written."
 ---
 
 # Implementation Plan & Process Review Workflow (`/plan-review`)
@@ -20,15 +20,15 @@ Examine the technical domains involved in the proposed implementation and verify
 | Domain | Skill to Activate | Key Invariants to Verify in Plan |
 |---|---|---|
 | Risky / complex logic | `/doubt-driven-development-slim` | Adversarial checks, failure modes, bounded loops |
-| Frontend / UI / CSS | `/frontend-ui-engineering-slim` | Modularity, touch targets $\ge 44\text{px}$, zero `!important`, zero inline styles |
+| Frontend / UI / CSS | `/frontend-ui-engineering-slim` | Modularity, touch targets >= 44px, zero `!important`, zero inline styles |
 | REST / GraphQL / RPC | `/api-and-interface-design-slim` | RFC 7807 error models, idempotency, backward compatibility |
 | DB / Schema / Migrations | `/database-and-migrations-slim` | Expand/contract pattern, non-blocking indexing, connection pool limits |
 | Auth / Data / Security | `/security-and-hardening-slim` | Parameterized queries, sanitization, secret hygiene, OWASP Top 10 |
-| Page Speed / Web Vitals | `/longest-contentful-paint-slim` | LCP $< 2.5\text{s}$, TTFB $< 800\text{ms}$, fetchpriority, CSS inlining |
+| Page Speed / Web Vitals | `/longest-contentful-paint-slim` | LCP < 2.5s, TTFB < 800ms, fetchpriority, CSS inlining |
 | Memory / CPU / Latency | `/performance-optimization-slim` | Profiling-first, hot-path optimization, event cleanup |
 | Defect / Regression | `/debugging-and-error-recovery-slim` | Falsifiable hypotheses, regression tests before fix |
 | Business Domain Logic | `/test-driven-development-slim` | Red-Green-Refactor, mock only at I/O boundaries |
-| Form / Dialog / Nav | `/accessibility-and-a11y-slim` | Semantic HTML, focus trap/restore, contrast $\ge 4.5:1$ |
+| Form / Dialog / Nav | `/accessibility-and-a11y-slim` | Semantic HTML, focus trap/restore, contrast >= 4.5:1 |
 | Pipeline / Scripts | `/ci-cd-and-automation-slim` | Non-interactive flags (`--yes`), reusable actions, SemVer |
 
 ---
@@ -42,9 +42,9 @@ Verify that the proposed plan has 100% coverage of the user request:
 ---
 
 ## 3. Constraints & Mandates Audit
-Ensure the plan adheres to the active guidelines in `AGENTS.md` / `GEMINI.md`:
+Ensure the plan adheres to the active guidelines in `AGENTS.md` and the project rules file:
 - **Safety Compliance:** Confirm the plan does not schedule Git staging or commits until the user has explicitly verified the changes.
-- **Surgical Edits:** Verify that file updates prioritize target-specific replacements (using `replace_file_content` or `multi_replace_file_content`) rather than rewriting whole files.
+- **Surgical Edits:** Verify that file updates prioritize target-specific replacements (using targeted edits) rather than rewriting whole files.
 - **Standards Check:** Ensure the plan's files follow language-specific guidelines (e.g., avoiding inline styles or `!important` tags).
 
 ---
