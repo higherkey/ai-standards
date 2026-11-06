@@ -13,7 +13,7 @@ Issue: #12
 
 ## 2. Blockers & Risks (4a)
 - Antigravity runtime can't be exercised here; skill edits and the `disable-model-invocation` key need a manual check there.
-- `claude` CLI is not on PATH here, so loading the synced `.claude/` tree in Claude Code (and haiku honoring `effort: low`) is a manual check.
+- Loading the synced `.claude/` tree in Claude Code (and haiku honoring `effort: low`) is a manual check. The app-bundled CLI exists but isn't signed in, and `claude agents --json` lists sessions, not agent definitions.
 
 ## 3. Quick Wins (4b)
 - Done: `release-npm.yml` keeps only the tag trigger (it double-published).
