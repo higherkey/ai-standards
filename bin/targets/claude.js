@@ -29,10 +29,16 @@ function managed(src) {
   return { ...result, rules: RULES_FILE };
 }
 
+const identity = (rel) => rel;
+
 const target = {
   name: 'claude',
   describe: 'Claude Code: .claude/skills/, .claude/agents/rails-*.md, .claude/rules/ai-standards.md',
-  rootDir: '.claude',
+  // Global (~/.claude/): skills, rails-*.md agents, rules/ai-standards.md. Never CLAUDE.md or settings.json.
+  layouts: {
+    project: { rootDir: '.claude', diskPath: identity },
+    global: { rootDir: '.claude', diskPath: identity }
+  },
   managed,
   install: (ctx) => syncTarget(target, ctx)
 };

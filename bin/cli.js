@@ -4,6 +4,7 @@ import { fileURLToPath } from 'url';
 import path from 'path';
 import fs from 'fs';
 import readline from 'readline';
+import os from 'os';
 import { targets, targetNames } from './targets/index.js';
 
 const sourceDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -21,7 +22,9 @@ Options:
   -y, --yes        Confirm "all" without prompting (required when non-interactive)
   -f, --force      Replace every locally edited managed file with the package version
                    (your copy is saved under .ai-standards-backup/ first)
-  -t, --target     Target directory (default: current working directory)
+  -g, --global     User-level install into your home directory (see Global install)
+  -t, --target     Target directory (default: current working directory; with --global it
+                   replaces the home directory as the base, e.g. for testing)
   -h, --help       Show this help message
 
 Agent resolution (first match wins):
@@ -39,6 +42,17 @@ Upgrades and local edits:
   your file is kept and the package version is written next to it as
   <file>.ai-standards-new. Interactive runs prompt instead. Replaced files are
   backed up to .ai-standards-backup/. Files you add yourself are never touched.
+
+Global install (--global):
+  claude        ~/.claude/skills/, ~/.claude/agents/rails-*.md, ~/.claude/rules/ai-standards.md
+                (CLAUDE.md and settings.json are never touched)
+  antigravity   ~/.gemini/config/skills/, ~/.gemini/config/rules/AGENTS.md, and
+                ~/.gemini/config/skills.json (an entry for "skills" is added if missing)
+  The config file is ~/.ai-standards.json. Manifest, .ai-standards-base/ snapshots, backups
+  and sidecars live under each root, next to the real files. Personal skills with the same
+  name as a packaged one are protected by the edit-aware pipeline: an existing unmanaged
+  file that differs is treated as edited (kept + <file>.ai-standards-new non-interactively,
+  prompted interactively). In Claude Code, user-level skills override same-named project skills.
 
 Targets:
 ${targetNames.map((n) => `  ${n.padEnd(12)} ${targets[n].describe}`).join('\n')}
@@ -76,7 +90,7 @@ class UsageError extends Error {}
 
 function parseArgs() {
   const args = process.argv.slice(2);
-  const options = { help: false, force: false, yes: false, agent: null, target: process.cwd() };
+  const options = { help: false, force: false, yes: false, global: false, agent: null, target: process.cwd(), targetGiven: false };
 
   const valueOf = (i, flag) => {
     const next = args[i + 1];
@@ -90,14 +104,19 @@ function parseArgs() {
       options.help = true;
     } else if (arg === '--force' || arg === '-f') {
       options.force = true;
+    } else if (arg === '--global' || arg === '-g') {
+      options.global = true;
     } else if (arg === '--yes' || arg === '-y') {
       options.yes = true;
     } else if (arg === '--agent' || arg === '-a') {
       options.agent = valueOf(i++, arg);
     } else if (arg === '--target' || arg === '-t') {
       options.target = path.resolve(valueOf(i++, arg));
+      options.targetGiven = true;
     }
   }
+  // Base directory all targets install under: the home directory for --global unless --target is explicit.
+  options.base = options.global && !options.targetGiven ? os.homedir() : options.target;
   return options;
 }
 
@@ -137,10 +156,10 @@ function isInteractive(inHook) {
 async function resolveAgents(options, inHook) {
   if (options.agent) return { names: parseNames(options.agent), confirmAll: true };
 
-  const configured = readConfig(options.target);
+  const configured = readConfig(options.base);
   if (configured) return { names: configured, confirmAll: false };
 
-  if (fs.existsSync(path.join(options.target, '.agents/skills/plan-review/SKILL.md'))) {
+  if (!options.global && fs.existsSync(path.join(options.base, '.agents/skills/plan-review/SKILL.md'))) {
     console.log(`ℹ️ Detected an existing Antigravity install. Add ${CONFIG_NAME} with { "agents": ["antigravity"] } (or pass --agent) to make this explicit.`);
     return { names: ['antigravity'], confirmAll: false };
   }
@@ -176,12 +195,12 @@ async function run() {
     const selected = names.includes('all') ? targetNames : [...new Set(names)];
 
     if (save) {
-      fs.mkdirSync(options.target, { recursive: true });
-      fs.writeFileSync(path.join(options.target, CONFIG_NAME), JSON.stringify({ agents: selected }, null, 2) + '\n');
+      fs.mkdirSync(options.base, { recursive: true });
+      fs.writeFileSync(path.join(options.base, CONFIG_NAME), JSON.stringify({ agents: selected }, null, 2) + '\n');
       console.log(`✅ Saved choice to ${CONFIG_NAME}.`);
     }
 
-    const ctx = { sourceDir, targetDir: options.target, force: options.force, interactive: isInteractive(inHook), ask, log: console.log };
+    const ctx = { sourceDir, targetDir: options.base, global: options.global, force: options.force, interactive: isInteractive(inHook), ask, log: console.log };
     console.log('🔄 Synchronizing AI rules & skills...');
     for (const name of selected) await targets[name].install(ctx);
     console.log('🎉 AI Rules & Skills synchronized successfully!');

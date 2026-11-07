@@ -434,6 +434,111 @@ test('legacy install: conflicting or heavily rewritten files are kept with a sid
   assert.ok(/no merge base/.test(rewritten.result.out), rewritten.result.out);
 });
 
+// ---------- global (user-level) installs; every run points --target at a temp base, never the real home ----------
+
+const globalRun = (dir, agents, extra = []) => run(['--global', '-a', agents, '-t', dir, ...extra]);
+const releasedAgents = () => {
+  const d = path.join(repoDir, 'known-bases/antigravity/AGENTS.md');
+  return fs.readFileSync(path.join(d, fs.readdirSync(d)[0]), 'utf8');
+};
+
+test('--global claude writes the Claude layout under the base and reports the real root', () => {
+  const dir = freshDir();
+  const { status, out } = globalRun(dir, 'claude');
+  assert.strictEqual(status, 0, out);
+  assert.ok(exists(dir, '.claude/skills/plan-review/SKILL.md') && exists(dir, '.claude/rules/ai-standards.md'));
+  for (const a of AGENT_FILES) assert.ok(exists(dir, `.claude/agents/${a}.md`));
+  assert.ok(exists(dir, '.claude/.ai-standards-manifest.json') && exists(dir, '.claude/.ai-standards-base/' + SKILL));
+  assert.ok(!exists(dir, '.claude/CLAUDE.md') && !exists(dir, '.claude/settings.json') && !exists(dir, '.gemini'));
+  assert.ok(out.includes(path.basename(dir) + '/.claude/'), out);
+});
+
+test('--global antigravity writes config/skills, config/rules/AGENTS.md and skills.json', () => {
+  const dir = freshDir();
+  const { status, out } = globalRun(dir, 'antigravity');
+  assert.strictEqual(status, 0, out);
+  assert.ok(exists(dir, '.gemini/config/skills/plan-review/SKILL.md'));
+  assert.ok(read(dir, '.gemini/config/rules/AGENTS.md').includes('ai-standards:adapter:antigravity'));
+  assert.ok(!exists(dir, '.gemini/config/AGENTS.md') && !exists(dir, '.agents'));
+  assert.deepStrictEqual(JSON.parse(read(dir, '.gemini/config/skills.json')), { entries: [{ path: 'skills' }] });
+  const m = JSON.parse(read(dir, '.gemini/config/.ai-standards-manifest.json'));
+  assert.ok(m.files['AGENTS.md'] && !m.files['rules/AGENTS.md'], 'manifest keys stay logical');
+  assert.ok(exists(dir, '.gemini/config/.ai-standards-base/rules/AGENTS.md'), 'snapshot uses the disk path');
+});
+
+test('--global preserves an existing skills.json (with BOM), adds the entry once', () => {
+  const dir = freshDir();
+  const file = path.join(dir, '.gemini/config/skills.json');
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  fs.writeFileSync(file, '\uFEFF' + JSON.stringify({ version: 2, entries: [{ path: 'D:/mine', enabled: true }] }));
+  globalRun(dir, 'antigravity');
+  const first = fs.readFileSync(file, 'utf8');
+  const json = JSON.parse(first.replace(/^\uFEFF/, ''));
+  assert.strictEqual(json.version, 2);
+  assert.deepStrictEqual(json.entries, [{ path: 'D:/mine', enabled: true }, { path: 'skills' }]);
+  globalRun(dir, 'antigravity');
+  assert.strictEqual(fs.readFileSync(file, 'utf8'), first, 'idempotent');
+
+  const bad = freshDir();
+  fs.mkdirSync(path.join(bad, '.gemini/config'), { recursive: true });
+  fs.writeFileSync(path.join(bad, '.gemini/config/skills.json'), '{ nope');
+  const { status, out } = globalRun(bad, 'antigravity');
+  assert.strictEqual(status, 0);
+  assert.strictEqual(read(bad, '.gemini/config/skills.json'), '{ nope');
+  assert.ok(out.includes('could not parse'), out);
+});
+
+test('--global keeps a pre-existing personal skill with a packaged name, writing a sidecar', () => {
+  const dir = freshDir();
+  const rel = '.claude/skills/plan-review/SKILL.md';
+  fs.mkdirSync(path.dirname(path.join(dir, rel)), { recursive: true });
+  fs.writeFileSync(path.join(dir, rel), 'my personal plan-review\n');
+  const { status, out } = globalRun(dir, 'claude');
+  assert.strictEqual(status, 0, out);
+  assert.strictEqual(read(dir, rel), 'my personal plan-review\n');
+  assert.ok(exists(dir, rel + '.ai-standards-new'), out);
+  assert.ok(exists(dir, '.claude/skills/git-branch-cleanup/SKILL.md'), 'other skills still installed');
+});
+
+test('--global antigravity: old rules/AGENTS.md matching a release is overwritten; appended local section is merged', () => {
+  const released = releasedAgents();
+  const old = freshDir();
+  fs.mkdirSync(path.join(old, '.gemini/config/rules'), { recursive: true });
+  fs.writeFileSync(path.join(old, '.gemini/config/rules/AGENTS.md'), released);
+  const first = globalRun(old, 'antigravity');
+  assert.strictEqual(first.status, 0, first.out);
+  assert.ok(read(old, '.gemini/config/rules/AGENTS.md').includes('ai-standards:adapter:antigravity'), first.out);
+  assert.ok(!exists(old, '.gemini/config/rules/AGENTS.md.ai-standards-new'));
+
+  const edited = freshDir();
+  fs.mkdirSync(path.join(edited, '.gemini/config/rules'), { recursive: true });
+  fs.writeFileSync(path.join(edited, '.gemini/config/rules/AGENTS.md'), released.trimEnd() + '\n\n## Local rules\n- my personal rule\n');
+  const second = globalRun(edited, 'antigravity');
+  const merged = read(edited, '.gemini/config/rules/AGENTS.md');
+  assert.ok(merged.includes('- my personal rule') && merged.includes('ai-standards:adapter:antigravity'), second.out);
+  assert.ok(/1 merged/.test(second.out) && /inferred from release history/.test(second.out), second.out);
+  assert.ok(read(edited, '.gemini/config/.ai-standards-backup/rules/AGENTS.md').includes('- my personal rule'));
+});
+
+test('--global reads agents from <base>/.ai-standards.json and skips the legacy .agents fingerprint', () => {
+  const dir = freshDir();
+  fs.writeFileSync(path.join(dir, '.ai-standards.json'), JSON.stringify({ agents: ['claude'] }));
+  assert.strictEqual(run(['-g', '-t', dir]).status, 0);
+  assert.ok(exists(dir, '.claude/skills') && !exists(dir, '.gemini'));
+
+  const legacy = freshDir();
+  fs.mkdirSync(path.join(legacy, '.agents/skills/plan-review'), { recursive: true });
+  fs.writeFileSync(path.join(legacy, '.agents/skills/plan-review/SKILL.md'), 'old');
+  assert.strictEqual(run(['-g', '-t', legacy]).status, 1);
+});
+
+test('--help documents --global', () => {
+  const { out } = run(['--help']);
+  for (const s of ['-g, --global', '~/.gemini/config/skills.json', '~/.claude/rules/ai-standards.md', 'override same-named project skills']) {
+    assert.ok(out.includes(s), `help missing "${s}"`);
+  }
+});
+
 let failed = 0;
 console.log('Starting CLI tests...');
 try {

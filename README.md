@@ -115,6 +115,24 @@ npx ai-standards-sync --agent all --yes
 - Each target writes `.ai-standards-manifest.json` in its install root (`.agents/` or `.claude/`) listing what it installed (with content hashes). Only files listed there are ever updated or pruned; your own skills, agents, and settings are never touched.
 - Personal `~/.claude/skills` entries shadow same-named project skills in Claude Code.
 
+### Global (user-level) install
+
+```bash
+npx ai-standards-sync --global --agent claude,antigravity
+```
+
+`--global` (`-g`) installs under your home directory instead of the project (`--target` overrides the base, handy for testing). The choice is read from and saved to `~/.ai-standards.json`.
+
+| Target | Skills | Rules | Extras |
+|---|---|---|---|
+| `claude` | `~/.claude/skills/` | `~/.claude/rules/ai-standards.md` | `~/.claude/agents/rails-*.md` (`CLAUDE.md` and `settings.json` are never touched) |
+| `antigravity` | `~/.gemini/config/skills/` | `~/.gemini/config/rules/AGENTS.md` | `~/.gemini/config/skills.json` gets a `{ "path": "skills" }` entry if missing (other entries kept) |
+
+- Manifest, `.ai-standards-base/` snapshots, backups and `.ai-standards-new` sidecars live under each root, next to the real files.
+- A personal skill with the same name as a packaged one is protected: an existing unmanaged file that differs counts as edited, so it is kept (with a sidecar) or prompted for, never silently overwritten.
+- **Precedence (Claude Code):** personal skills shadow same-named project skills, and rules in `~/.claude/rules/` load in every project alongside the project's own files.
+- **When to use which:** global for your own machine; project installs for team repos and CI, where everyone should get the same committed standards.
+
 ### Upgrades and local edits
 
 Every managed file (each file under a skill, Claude subagents, the rules file) is tracked by content hash (line endings and BOM ignored) and a snapshot of what was last installed in `.ai-standards-base/` inside the install root. On sync:
