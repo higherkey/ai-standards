@@ -1,5 +1,7 @@
 import fs from 'fs';
 import path from 'path';
+import crypto from 'crypto';
+import { execFileSync } from 'child_process';
 
 export const MANIFEST_NAME = '.ai-standards-manifest.json';
 
@@ -11,54 +13,76 @@ export function readManifest(root) {
   }
 }
 
-export function listDirs(dir) {
-  if (!fs.existsSync(dir)) return [];
-  return fs.readdirSync(dir, { withFileTypes: true }).filter((e) => e.isDirectory()).map((e) => e.name);
+/** Strip a UTF-8 BOM and convert CRLF to LF. Binary content (contains NUL) is returned untouched. */
+export function normalize(buf) {
+  if (buf.includes(0)) return buf;
+  return Buffer.from(buf.toString('utf8').replace(/^﻿/, '').replace(/\r\n/g, '\n'), 'utf8');
 }
 
-export function listFiles(dir) {
-  if (!fs.existsSync(dir)) return [];
-  return fs.readdirSync(dir, { withFileTypes: true }).filter((e) => e.isFile()).map((e) => e.name);
+/** Directory name under known-bases/<target>/ for a managed file path. */
+export const baseDirName = (rel) => rel.replaceAll('/', '__');
+
+export function hashOf(buf) {
+  return crypto.createHash('sha256').update(normalize(buf)).digest('hex');
 }
 
-// Remove entries a previous sync installed that are no longer shipped. Never touches unlisted files.
-function prune(baseDir, previous = [], current = []) {
-  for (const name of previous) {
-    if (current.includes(name) || name !== path.basename(name)) continue;
-    fs.rmSync(path.join(baseDir, name), { recursive: true, force: true });
-  }
+// A "source" is a read-only view of package content: the working tree or a git tag.
+// read(rel) -> Buffer|null; list(dir) -> sorted posix paths of all files below dir.
+export function fsSource(dir) {
+  const walk = (rel) => fs.readdirSync(path.join(dir, rel), { withFileTypes: true }).flatMap((e) => {
+    const child = `${rel}/${e.name}`;
+    return e.isDirectory() ? walk(child) : [child];
+  });
+  return {
+    read(rel) {
+      try { return fs.readFileSync(path.join(dir, rel)); } catch { return null; }
+    },
+    list(rel) {
+      return fs.existsSync(path.join(dir, rel)) ? walk(rel).sort() : [];
+    }
+  };
+}
+
+export function gitSource(tag, cwd) {
+  let names = null;
+  const tree = () => names ??= execFileSync('git', ['ls-tree', '-r', '-z', '--name-only', tag], { cwd, maxBuffer: 1 << 28 })
+    .toString('utf8').split('\0').filter(Boolean);
+  return {
+    read(rel) {
+      try {
+        return execFileSync('git', ['show', `${tag}:${rel}`], { cwd, maxBuffer: 1 << 28, stdio: ['ignore', 'pipe', 'ignore'] });
+      } catch {
+        return null;
+      }
+    },
+    list: (rel) => tree().filter((n) => n.startsWith(`${rel}/`)).sort()
+  };
+}
+
+export function readText(src, rel) {
+  const buf = src.read(rel);
+  return buf === null ? null : buf.toString('utf8').replace(/\s+$/, '');
 }
 
 /**
- * Copy packaged skills (and optional agent files) into `root`, pruning entries that
- * dropped out of the package, and write the manifest.
- * Returns the manifest so callers can add the rules entry before saving.
+ * Collect skills (every file under skills/<name>/) and optional top-level agent files from a source.
+ * Returns { files: Map<rel, Buffer>, skills, agents } with rel relative to the install root.
  */
-export function syncManaged({ sourceDir, root, agentsSrc, rules }) {
-  const previous = readManifest(root);
-  const skillsSrc = path.join(sourceDir, 'skills');
-  const skills = listDirs(skillsSrc);
-  const agents = agentsSrc ? listFiles(agentsSrc) : [];
-
-  fs.mkdirSync(path.join(root, 'skills'), { recursive: true });
-  prune(path.join(root, 'skills'), previous.skills, skills);
-  for (const skill of skills) {
-    fs.cpSync(path.join(skillsSrc, skill), path.join(root, 'skills', skill), { recursive: true, force: true });
+export function collectManaged(src, { agentsDir } = {}) {
+  const files = new Map();
+  const skills = new Set();
+  for (const rel of src.list('skills')) {
+    files.set(rel, src.read(rel));
+    skills.add(rel.split('/')[1]);
   }
-
-  if (agentsSrc) {
-    fs.mkdirSync(path.join(root, 'agents'), { recursive: true });
-    prune(path.join(root, 'agents'), previous.agents, agents);
-    for (const file of agents) {
-      fs.copyFileSync(path.join(agentsSrc, file), path.join(root, 'agents', file));
+  const agents = [];
+  if (agentsDir) {
+    for (const rel of src.list(agentsDir)) {
+      const name = rel.slice(agentsDir.length + 1);
+      if (name.includes('/')) continue;
+      files.set(`agents/${name}`, src.read(rel));
+      agents.push(name);
     }
   }
-
-  const manifest = { skills, agents, rules };
-  fs.writeFileSync(path.join(root, MANIFEST_NAME), JSON.stringify(manifest, null, 2) + '\n');
-  return { manifest, skillCount: skills.length, agentCount: agents.length };
-}
-
-export function readSource(sourceDir, ...parts) {
-  return fs.readFileSync(path.join(sourceDir, ...parts), 'utf8').replace(/\s+$/, '');
+  return { files, skills: [...skills].sort(), agents };
 }

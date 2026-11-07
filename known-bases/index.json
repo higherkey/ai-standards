@@ -1,0 +1,13 @@
+{
+  "antigravity": {
+    "AGENTS.md": [
+      "e4ded4641fe60264a4dfa58527ae79eb0dd8549f204cb3d7352730b3b17c3162",
+      "11116eccb25eed7c772cc320bb0a56f35e999035eff1676780a500fac851baef"
+    ]
+  },
+  "claude": {
+    "rules/ai-standards.md": [
+      "bd8b14bd3afff07973bf26779bd5f55f6e06611fa41b3fa7b009e877a8a7fa35"
+    ]
+  }
+}

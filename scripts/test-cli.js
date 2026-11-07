@@ -3,8 +3,11 @@ import assert from 'assert';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
+import crypto from 'crypto';
+import { fileURLToPath, pathToFileURL } from 'url';
 
-const cli = path.resolve('bin/cli.js');
+const repoDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const cli = path.join(repoDir, 'bin/cli.js');
 const root = fs.mkdtempSync(path.join(os.tmpdir(), 'ai-standards-test-'));
 let counter = 0;
 
@@ -19,8 +22,8 @@ function baseEnv(extra = {}) {
 }
 
 // stdio is piped, so the CLI never sees a TTY.
-function run(args, { env = {} } = {}) {
-  const result = spawnSync(process.execPath, [cli, ...args], { env: baseEnv(env), encoding: 'utf8', stdio: 'pipe' });
+function run(args, { env = {}, cliPath = cli } = {}) {
+  const result = spawnSync(process.execPath, [cliPath, ...args], { env: baseEnv(env), encoding: 'utf8', stdio: 'pipe' });
   return { status: result.status, out: `${result.stdout}${result.stderr}` };
 }
 
@@ -32,6 +35,24 @@ function freshDir() {
 
 const read = (dir, rel) => fs.readFileSync(path.join(dir, rel), 'utf8');
 const exists = (dir, rel) => fs.existsSync(path.join(dir, rel));
+
+const sha = (text) => crypto.createHash('sha256').update(text).digest('hex');
+const SKILL = 'skills/plan-review/SKILL.md';
+
+// A throwaway copy of the package, so a test can play "older/newer release" without mocking.
+function packageCopy(mutate = () => {}) {
+  const pkg = freshDir();
+  for (const item of ['bin', 'skills', 'targets', 'AGENTS.md', 'package.json']) {
+    fs.cpSync(path.join(repoDir, item), path.join(pkg, item), { recursive: true });
+  }
+  fs.writeFileSync(path.join(pkg, 'known-hashes.json'), '{}');
+  mutate(pkg);
+  return { dir: pkg, cli: path.join(pkg, 'bin/cli.js') };
+}
+const sync = (pkg, dir, extra = []) => run(['-a', 'claude', '-t', dir, ...extra], { cliPath: pkg.cli });
+const editFile = (base, rel, fn) => fs.writeFileSync(path.join(base, rel), fn(fs.readFileSync(path.join(base, rel), 'utf8')));
+const lf = (text) => text.replace(/\r\n/g, '\n');
+const manifestOf = (dir) => JSON.parse(read(dir, '.claude/.ai-standards-manifest.json'));
 
 const tests = [];
 const test = (name, fn) => tests.push([name, fn]);
@@ -54,21 +75,28 @@ test('antigravity initial sync writes layout, adapter, and manifest', () => {
   assert.ok(!exists(dir, '.claude'), 'claude files must not be written');
 });
 
-test('antigravity AGENTS.md is init-once, --force overwrites', () => {
+test('antigravity AGENTS.md keeps local edits (sidecar when base unknown), --force replaces with backup', () => {
   const dir = freshDir();
   run(['-a', 'antigravity', '-t', dir]);
   const file = path.join(dir, '.agents/AGENTS.md');
   fs.writeFileSync(file, '# Local Override Content');
+  fs.rmSync(path.join(dir, '.agents/.ai-standards-base'), { recursive: true });
+  const manifestPath = path.join(dir, '.agents/.ai-standards-manifest.json');
+  const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+  delete manifest.files['AGENTS.md'];
+  fs.writeFileSync(manifestPath, JSON.stringify(manifest));
 
   const second = run(['-a', 'antigravity', '-t', dir]);
   assert.strictEqual(fs.readFileSync(file, 'utf8'), '# Local Override Content');
-  assert.ok(second.out.includes('lacks the Antigravity adapter'), 'expected adapter hint');
+  assert.ok(second.out.includes('AGENTS.md'), 'expected a note about AGENTS.md');
+  assert.ok(exists(dir, '.agents/AGENTS.md.ai-standards-new'));
 
   run(['-a', 'antigravity', '-t', dir, '--force']);
   assert.ok(read(dir, '.agents/AGENTS.md').includes('ai-standards:adapter:antigravity'));
+  assert.strictEqual(read(dir, '.agents/.ai-standards-backup/AGENTS.md'), '# Local Override Content');
 });
 
-test('claude sync writes skills, 5 agents, rules; rules refresh', () => {
+test('claude sync writes skills, 5 agents, rules; --force replaces an edited rules file', () => {
   const dir = freshDir();
   assert.strictEqual(run(['--agent', 'claude', '--target', dir]).status, 0);
   assert.ok(exists(dir, '.claude/skills/plan-review/SKILL.md'));
@@ -80,7 +108,7 @@ test('claude sync writes skills, 5 agents, rules; rules refresh', () => {
   assert.ok(!exists(dir, '.agents'), 'antigravity files must not be written');
 
   fs.writeFileSync(path.join(dir, '.claude/rules/ai-standards.md'), 'stale');
-  run(['-a', 'claude', '-t', dir]);
+  run(['-a', 'claude', '-t', dir, '--force']);
   assert.ok(read(dir, '.claude/rules/ai-standards.md').includes('Claude Code Adapter'));
 });
 
@@ -142,7 +170,8 @@ test('legacy fingerprint resolves to antigravity', () => {
   const { status, out } = run(['-t', dir]);
   assert.strictEqual(status, 0);
   assert.ok(out.includes('.ai-standards.json'), 'expected config hint');
-  assert.ok(read(dir, '.agents/skills/plan-review/SKILL.md') !== 'old');
+  assert.strictEqual(read(dir, '.agents/skills/plan-review/SKILL.md'), 'old', 'unrecognised edited file is preserved');
+  assert.ok(exists(dir, '.agents/skills/plan-review/SKILL.md.ai-standards-new'));
   assert.ok(!exists(dir, '.claude'));
 });
 
@@ -180,6 +209,8 @@ test('manifest prunes removed managed skills and keeps user skills', () => {
   fs.writeFileSync(path.join(dir, '.claude/agents/my-agent.md'), 'mine');
   manifest.skills.push('retired-skill');
   manifest.agents.push('rails-retired.md');
+  manifest.files['skills/retired-skill/SKILL.md'] = sha('x');
+  manifest.files['agents/rails-retired.md'] = sha('x');
   fs.writeFileSync(manifestPath, JSON.stringify(manifest));
 
   run(['-a', 'claude', '-t', dir]);
@@ -207,12 +238,313 @@ test('write errors fail normally but are non-fatal under postinstall', () => {
   assert.strictEqual(run(['-a', 'antigravity', '-t', invalid], { env: { npm_lifecycle_event: 'postinstall' } }).status, 0);
 });
 
+test('manifest v2 shape, snapshot, and no leftovers', () => {
+  const dir = freshDir();
+  run(['-a', 'claude', '-t', dir]);
+  const m = manifestOf(dir);
+  assert.strictEqual(m.manifestVersion, 2);
+  assert.strictEqual(m.packageVersion, JSON.parse(fs.readFileSync(path.join(repoDir, 'package.json'), 'utf8')).version);
+  assert.strictEqual(m.rules, 'rules/ai-standards.md');
+  assert.ok(m.skills.includes('plan-review') && m.agents.includes('rails-auditor.md'));
+  assert.match(m.files[SKILL], /^[0-9a-f]{64}$/);
+  assert.ok(m.files['agents/rails-auditor.md'] && m.files['rules/ai-standards.md']);
+  assert.strictEqual(read(dir, '.claude/.ai-standards-base/' + SKILL), read(dir, '.claude/' + SKILL));
+  assert.ok(!exists(dir, '.claude/' + SKILL + '.ai-standards-new'));
+});
+
+test('unedited file is overwritten on upgrade', () => {
+  const older = packageCopy();
+  const newer = packageCopy((p) => editFile(p, SKILL, (t) => t + '\nNew upstream line.\n'));
+  const dir = freshDir();
+  sync(older, dir);
+  const { status, out } = sync(newer, dir);
+  assert.strictEqual(status, 0);
+  assert.ok(read(dir, '.claude/' + SKILL).includes('New upstream line.'));
+  assert.ok(/1 updated, 0 merged, 0 kept \(edited\), 0 conflicts/.test(out), out);
+  assert.strictEqual(manifestOf(dir).files[SKILL], sha(lf(read(dir, '.claude/' + SKILL))));
+});
+
+test('edited file with unchanged upstream is kept', () => {
+  const dir = freshDir();
+  run(['-a', 'claude', '-t', dir]);
+  editFile(path.join(dir, '.claude'), SKILL, (t) => 'MINE\n' + t);
+  const { out } = run(['-a', 'claude', '-t', dir]);
+  assert.ok(read(dir, '.claude/' + SKILL).startsWith('MINE'));
+  assert.ok(out.includes('kept your edits (no upstream change)'), out);
+  assert.ok(!exists(dir, '.claude/' + SKILL + '.ai-standards-new'));
+});
+
+test('both changed with a clean merge is auto-merged with a backup', () => {
+  const older = packageCopy();
+  const newer = packageCopy((p) => editFile(p, SKILL, (t) => t.trimEnd() + '\nUpstream tail line.\n'));
+  const dir = freshDir();
+  sync(older, dir);
+  editFile(path.join(dir, '.claude'), SKILL, (t) => 'MY HEAD LINE\n\n' + t);
+  const mine = read(dir, '.claude/' + SKILL);
+  const { status, out } = sync(newer, dir);
+  assert.strictEqual(status, 0);
+  const merged = read(dir, '.claude/' + SKILL);
+  assert.ok(merged.startsWith('MY HEAD LINE') && merged.includes('Upstream tail line.'));
+  assert.ok(/1 merged/.test(out), out);
+  assert.strictEqual(read(dir, '.claude/.ai-standards-backup/' + SKILL), mine);
+  assert.strictEqual(lf(read(dir, '.claude/.ai-standards-base/' + SKILL)), lf(read(newer.dir, SKILL)));
+});
+
+test('conflicting edit keeps the user file and writes .ai-standards-new', () => {
+  const older = packageCopy();
+  const newer = packageCopy((p) => editFile(p, SKILL, (t) => 'UPSTREAM HEAD\n' + t));
+  const dir = freshDir();
+  sync(older, dir);
+  editFile(path.join(dir, '.claude'), SKILL, (t) => 'MY HEAD\n' + t);
+  const mine = read(dir, '.claude/' + SKILL);
+  const { status, out } = sync(newer, dir);
+  assert.strictEqual(status, 0);
+  assert.strictEqual(read(dir, '.claude/' + SKILL), mine);
+  assert.ok(read(dir, '.claude/' + SKILL + '.ai-standards-new').startsWith('UPSTREAM HEAD'));
+  assert.ok(/1 conflicts/.test(out), out);
+  assert.strictEqual(lf(read(dir, '.claude/.ai-standards-base/' + SKILL)), lf(read(older.dir, SKILL)), 'base must not advance when mine is kept');
+});
+
+test('--force takes the package version for edited files, with backup', () => {
+  const dir = freshDir();
+  run(['-a', 'claude', '-t', dir]);
+  const original = read(dir, '.claude/' + SKILL);
+  editFile(path.join(dir, '.claude'), SKILL, (t) => 'MINE\n' + t);
+  const mine = read(dir, '.claude/' + SKILL);
+  run(['-a', 'claude', '-t', dir, '--force']);
+  assert.strictEqual(read(dir, '.claude/' + SKILL), original);
+  assert.strictEqual(read(dir, '.claude/.ai-standards-backup/' + SKILL), mine);
+});
+
+test('CRLF-only difference counts as unedited', () => {
+  const older = packageCopy();
+  const newer = packageCopy((p) => editFile(p, SKILL, (t) => t + '\nNew upstream line.\n'));
+  const dir = freshDir();
+  sync(older, dir);
+  editFile(path.join(dir, '.claude'), SKILL, (t) => t.replace(/\r?\n/g, '\r\n'));
+  const { out } = sync(newer, dir);
+  assert.ok(read(dir, '.claude/' + SKILL).includes('New upstream line.'));
+  assert.ok(/0 kept \(edited\), 0 conflicts/.test(out), out);
+});
+
+test('legacy v1 manifest with content matching known-hashes is overwritten', () => {
+  const legacy = 'legacy released content\n';
+  const pkg = packageCopy((p) => fs.writeFileSync(path.join(p, 'known-hashes.json'),
+    JSON.stringify({ claude: { [SKILL]: [sha(legacy)] } })));
+  const dir = freshDir();
+  fs.mkdirSync(path.join(dir, '.claude/skills/plan-review'), { recursive: true });
+  fs.writeFileSync(path.join(dir, '.claude/' + SKILL), legacy.replace(/\n/g, '\r\n'));
+  fs.writeFileSync(path.join(dir, '.claude/.ai-standards-manifest.json'),
+    JSON.stringify({ skills: ['plan-review'], agents: [], rules: 'rules/ai-standards.md' }));
+  const { status, out } = sync(pkg, dir);
+  assert.strictEqual(status, 0);
+  assert.strictEqual(lf(read(dir, '.claude/' + SKILL)), lf(read(pkg.dir, SKILL)));
+  assert.ok(!exists(dir, '.claude/' + SKILL + '.ai-standards-new'), out);
+  assert.strictEqual(manifestOf(dir).manifestVersion, 2);
+});
+
+test('locally deleted managed file is not restored non-interactively', () => {
+  const dir = freshDir();
+  run(['-a', 'claude', '-t', dir]);
+  fs.rmSync(path.join(dir, '.claude/agents/rails-profiler.md'));
+  const { status, out } = run(['-a', 'claude', '-t', dir]);
+  assert.strictEqual(status, 0);
+  assert.ok(!exists(dir, '.claude/agents/rails-profiler.md'));
+  assert.ok(out.includes('deleted locally'), out);
+  assert.ok(manifestOf(dir).files['agents/rails-profiler.md'], 'still tracked, so it is not silently restored later');
+  run(['-a', 'claude', '-t', dir, '--force']);
+  assert.ok(exists(dir, '.claude/agents/rails-profiler.md'), '--force restores');
+});
+
+test('files removed upstream: unedited pruned, edited kept and released from management', () => {
+  const gone = ['subagent-delegate-on-rails', 'git-branch-cleanup'];
+  const older = packageCopy();
+  const newer = packageCopy((p) => gone.forEach((g) => fs.rmSync(path.join(p, 'skills', g), { recursive: true })));
+  const dir = freshDir();
+  sync(older, dir);
+  fs.appendFileSync(path.join(dir, '.claude/skills/git-branch-cleanup/SKILL.md'), '\nmy notes\n');
+  const { status, out } = sync(newer, dir);
+  assert.strictEqual(status, 0);
+  assert.ok(!exists(dir, '.claude/skills/subagent-delegate-on-rails'), 'unedited removed skill pruned');
+  assert.ok(read(dir, '.claude/skills/git-branch-cleanup/SKILL.md').includes('my notes'));
+  assert.ok(out.includes('no longer shipped'), out);
+  assert.ok(!manifestOf(dir).files['skills/git-branch-cleanup/SKILL.md']);
+  assert.ok(!exists(dir, '.claude/.ai-standards-base/skills/git-branch-cleanup'));
+});
+
+test('interactive prompts: new package version, keep mine, and apply-to-all', async () => {
+  const { syncTarget } = await import(pathToFileURL(path.join(repoDir, 'bin/sync.js')).href);
+  const { default: claude } = await import(pathToFileURL(path.join(repoDir, 'bin/targets/claude.js')).href);
+  const files = ['agents/rails-auditor.md', 'agents/rails-explorer.md', 'agents/rails-profiler.md'];
+  const older = packageCopy();
+  const newer = packageCopy((p) => files.forEach((f) => fs.appendFileSync(path.join(p, 'targets/claude', f), '\nupstream\n')));
+  const dir = freshDir();
+  const ctx = { targetDir: dir, log: () => {} };
+  await syncTarget(claude, { ...ctx, sourceDir: older.dir });
+  for (const f of files) editFile(path.join(dir, '.claude'), f, (t) => 'MINE\n' + t);
+  fs.rmSync(path.join(dir, '.claude/.ai-standards-base'), { recursive: true });
+  const asked = [];
+  const answers = ['n', 'k!'];
+  await syncTarget(claude, { ...ctx, sourceDir: newer.dir, interactive: true, ask: async (q) => { asked.push(q); return answers.shift(); } });
+  assert.strictEqual(asked.length, 2, 'apply-to-all skips the third prompt');
+  assert.deepStrictEqual(files.map((f) => read(dir, '.claude/' + f).startsWith('MINE')), [false, true, true]);
+  assert.ok(exists(dir, '.claude/.ai-standards-backup/' + files[0]));
+});
+
+// Legacy (v1, no snapshot) antigravity install of `older`, with the older rules file shipped as a known base in `newer`.
+function legacyAntigravity(edit) {
+  const older = packageCopy();
+  const newer = packageCopy((p) => editFile(p, 'AGENTS.md', (t) => 'UPSTREAM HEAD\n\n' + t));
+  const dir = freshDir();
+  const ag = (pkg, extra = []) => run(['-a', 'antigravity', '-t', dir, ...extra], { cliPath: pkg.cli });
+  ag(older);
+  const released = lf(read(dir, '.agents/AGENTS.md'));
+  const baseDir = path.join(newer.dir, 'known-bases/antigravity/AGENTS.md');
+  fs.mkdirSync(baseDir, { recursive: true });
+  fs.writeFileSync(path.join(baseDir, sha(released) + '.md'), released);
+  fs.rmSync(path.join(dir, '.agents/.ai-standards-base'), { recursive: true });
+  fs.writeFileSync(path.join(dir, '.agents/.ai-standards-manifest.json'),
+    JSON.stringify({ skills: [], agents: [], rules: 'AGENTS.md' }));
+  fs.writeFileSync(path.join(dir, '.agents/AGENTS.md'), edit(released));
+  return { dir, newer, released, result: ag(newer) };
+}
+
+test('legacy install with appended local rules merges using a base inferred from release history', () => {
+  const { dir, newer, released, result } = legacyAntigravity((t) => t + '\n## Local rules\n- my local rule\n');
+  const merged = read(dir, '.agents/AGENTS.md');
+  assert.strictEqual(result.status, 0);
+  assert.ok(merged.startsWith('UPSTREAM HEAD'), 'new package content applied');
+  assert.ok(merged.includes('## Local rules') && merged.includes('- my local rule'), 'local section kept');
+  assert.ok(/inferred from release history/.test(result.out) && /1 merged/.test(result.out), result.out);
+  assert.ok(!exists(dir, '.agents/AGENTS.md.ai-standards-new'));
+  assert.ok(read(dir, '.agents/.ai-standards-backup/AGENTS.md').includes('- my local rule'));
+  assert.strictEqual(lf(read(dir, '.agents/.ai-standards-base/AGENTS.md')), lf(read(newer.dir, 'AGENTS.md')).trimEnd() + '\n\n' + lf(read(newer.dir, 'targets/antigravity/adapter.md')).trimEnd() + '\n');
+  assert.ok(released.length > 0);
+});
+
+test('legacy install: conflicting or heavily rewritten files are kept with a sidecar', () => {
+  const close = legacyAntigravity((t) => 'MY HEAD\n\n' + t);
+  assert.ok(read(close.dir, '.agents/AGENTS.md').startsWith('MY HEAD'));
+  assert.ok(exists(close.dir, '.agents/AGENTS.md.ai-standards-new'));
+  assert.ok(/1 conflicts/.test(close.result.out), close.result.out);
+
+  const rewritten = legacyAntigravity(() => '# My own rules\n\nNothing like the original.\n');
+  assert.strictEqual(read(rewritten.dir, '.agents/AGENTS.md'), '# My own rules\n\nNothing like the original.\n');
+  assert.ok(exists(rewritten.dir, '.agents/AGENTS.md.ai-standards-new'));
+  assert.ok(/no merge base/.test(rewritten.result.out), rewritten.result.out);
+});
+
+// ---------- global (user-level) installs; every run points --target at a temp base, never the real home ----------
+
+const globalRun = (dir, agents, extra = []) => run(['--global', '-a', agents, '-t', dir, ...extra]);
+const releasedAgents = () => {
+  const d = path.join(repoDir, 'known-bases/antigravity/AGENTS.md');
+  return fs.readFileSync(path.join(d, fs.readdirSync(d)[0]), 'utf8');
+};
+
+test('--global claude writes the Claude layout under the base and reports the real root', () => {
+  const dir = freshDir();
+  const { status, out } = globalRun(dir, 'claude');
+  assert.strictEqual(status, 0, out);
+  assert.ok(exists(dir, '.claude/skills/plan-review/SKILL.md') && exists(dir, '.claude/rules/ai-standards.md'));
+  for (const a of AGENT_FILES) assert.ok(exists(dir, `.claude/agents/${a}.md`));
+  assert.ok(exists(dir, '.claude/.ai-standards-manifest.json') && exists(dir, '.claude/.ai-standards-base/' + SKILL));
+  assert.ok(!exists(dir, '.claude/CLAUDE.md') && !exists(dir, '.claude/settings.json') && !exists(dir, '.gemini'));
+  assert.ok(out.includes(path.basename(dir) + '/.claude/'), out);
+});
+
+test('--global antigravity writes config/skills, config/rules/AGENTS.md and skills.json', () => {
+  const dir = freshDir();
+  const { status, out } = globalRun(dir, 'antigravity');
+  assert.strictEqual(status, 0, out);
+  assert.ok(exists(dir, '.gemini/config/skills/plan-review/SKILL.md'));
+  assert.ok(read(dir, '.gemini/config/rules/AGENTS.md').includes('ai-standards:adapter:antigravity'));
+  assert.ok(!exists(dir, '.gemini/config/AGENTS.md') && !exists(dir, '.agents'));
+  assert.deepStrictEqual(JSON.parse(read(dir, '.gemini/config/skills.json')), { entries: [{ path: 'skills' }] });
+  const m = JSON.parse(read(dir, '.gemini/config/.ai-standards-manifest.json'));
+  assert.ok(m.files['AGENTS.md'] && !m.files['rules/AGENTS.md'], 'manifest keys stay logical');
+  assert.ok(exists(dir, '.gemini/config/.ai-standards-base/rules/AGENTS.md'), 'snapshot uses the disk path');
+});
+
+test('--global preserves an existing skills.json (with BOM), adds the entry once', () => {
+  const dir = freshDir();
+  const file = path.join(dir, '.gemini/config/skills.json');
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  fs.writeFileSync(file, '\uFEFF' + JSON.stringify({ version: 2, entries: [{ path: 'D:/mine', enabled: true }] }));
+  globalRun(dir, 'antigravity');
+  const first = fs.readFileSync(file, 'utf8');
+  const json = JSON.parse(first.replace(/^\uFEFF/, ''));
+  assert.strictEqual(json.version, 2);
+  assert.deepStrictEqual(json.entries, [{ path: 'D:/mine', enabled: true }, { path: 'skills' }]);
+  globalRun(dir, 'antigravity');
+  assert.strictEqual(fs.readFileSync(file, 'utf8'), first, 'idempotent');
+
+  const bad = freshDir();
+  fs.mkdirSync(path.join(bad, '.gemini/config'), { recursive: true });
+  fs.writeFileSync(path.join(bad, '.gemini/config/skills.json'), '{ nope');
+  const { status, out } = globalRun(bad, 'antigravity');
+  assert.strictEqual(status, 0);
+  assert.strictEqual(read(bad, '.gemini/config/skills.json'), '{ nope');
+  assert.ok(out.includes('could not parse'), out);
+});
+
+test('--global keeps a pre-existing personal skill with a packaged name, writing a sidecar', () => {
+  const dir = freshDir();
+  const rel = '.claude/skills/plan-review/SKILL.md';
+  fs.mkdirSync(path.dirname(path.join(dir, rel)), { recursive: true });
+  fs.writeFileSync(path.join(dir, rel), 'my personal plan-review\n');
+  const { status, out } = globalRun(dir, 'claude');
+  assert.strictEqual(status, 0, out);
+  assert.strictEqual(read(dir, rel), 'my personal plan-review\n');
+  assert.ok(exists(dir, rel + '.ai-standards-new'), out);
+  assert.ok(exists(dir, '.claude/skills/git-branch-cleanup/SKILL.md'), 'other skills still installed');
+});
+
+test('--global antigravity: old rules/AGENTS.md matching a release is overwritten; appended local section is merged', () => {
+  const released = releasedAgents();
+  const old = freshDir();
+  fs.mkdirSync(path.join(old, '.gemini/config/rules'), { recursive: true });
+  fs.writeFileSync(path.join(old, '.gemini/config/rules/AGENTS.md'), released);
+  const first = globalRun(old, 'antigravity');
+  assert.strictEqual(first.status, 0, first.out);
+  assert.ok(read(old, '.gemini/config/rules/AGENTS.md').includes('ai-standards:adapter:antigravity'), first.out);
+  assert.ok(!exists(old, '.gemini/config/rules/AGENTS.md.ai-standards-new'));
+
+  const edited = freshDir();
+  fs.mkdirSync(path.join(edited, '.gemini/config/rules'), { recursive: true });
+  fs.writeFileSync(path.join(edited, '.gemini/config/rules/AGENTS.md'), released.trimEnd() + '\n\n## Local rules\n- my personal rule\n');
+  const second = globalRun(edited, 'antigravity');
+  const merged = read(edited, '.gemini/config/rules/AGENTS.md');
+  assert.ok(merged.includes('- my personal rule') && merged.includes('ai-standards:adapter:antigravity'), second.out);
+  assert.ok(/1 merged/.test(second.out) && /inferred from release history/.test(second.out), second.out);
+  assert.ok(read(edited, '.gemini/config/.ai-standards-backup/rules/AGENTS.md').includes('- my personal rule'));
+});
+
+test('--global reads agents from <base>/.ai-standards.json and skips the legacy .agents fingerprint', () => {
+  const dir = freshDir();
+  fs.writeFileSync(path.join(dir, '.ai-standards.json'), JSON.stringify({ agents: ['claude'] }));
+  assert.strictEqual(run(['-g', '-t', dir]).status, 0);
+  assert.ok(exists(dir, '.claude/skills') && !exists(dir, '.gemini'));
+
+  const legacy = freshDir();
+  fs.mkdirSync(path.join(legacy, '.agents/skills/plan-review'), { recursive: true });
+  fs.writeFileSync(path.join(legacy, '.agents/skills/plan-review/SKILL.md'), 'old');
+  assert.strictEqual(run(['-g', '-t', legacy]).status, 1);
+});
+
+test('--help documents --global', () => {
+  const { out } = run(['--help']);
+  for (const s of ['-g, --global', '~/.gemini/config/skills.json', '~/.claude/rules/ai-standards.md', 'override same-named project skills']) {
+    assert.ok(out.includes(s), `help missing "${s}"`);
+  }
+});
+
 let failed = 0;
 console.log('Starting CLI tests...');
 try {
   for (const [name, fn] of tests) {
     try {
-      fn();
+      await fn();
       console.log(`  PASS ${name}`);
     } catch (error) {
       failed++;
