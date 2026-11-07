@@ -41,7 +41,20 @@ If the environment has a decision-model capability installed (for example a `dec
 - Send the smallest sufficient excerpt, never secrets, credentials, `.env` contents, or personal data.
 - Treat results as advisory. On low confidence (under about 0.6) or a decisive call, verify yourself or escalate once to a stronger decision model; never use one as the sole gate on an irreversible action.
 
-On Claude, each archetype below is installed as a named subagent (`rails-*`) with its model and effort preconfigured; dispatch it by name. Doubt-driven development's adversarial reviewer is the auditor archetype (Archetype A).
+### Choosing Model and Effort Per Dispatch
+Each archetype has a suggested tier and effort (where the host has an effort setting). These are starting points, not locks: pick both for each dispatch.
+- Raise them for high stakes (security, data, migrations), ambiguous contracts, or a failed earlier attempt. Lower them for small, mechanical, well-specified work.
+- If the decision tier is set up, ask it instead of deliberating: a choice question over the candidate tier and effort pairs, given a one-line task summary. Take its pick at confidence of about 0.6 or more; otherwise use the suggested defaults. Skip this when the defaults plainly fit.
+
+| Archetype | Suggested tier | Suggested effort |
+|-----------|----------------|------------------|
+| A Auditor | standard | high |
+| B Implementer | standard (fast for known-content edits) | medium |
+| C Profiler | standard | high |
+| D Test Engineer | standard | medium |
+| E Explorer | fast | low |
+
+On Claude, each archetype below is installed as a named subagent (`rails-*`) with these defaults in its frontmatter; dispatch it by name and pass `model` or `effort` to override. Doubt-driven development's adversarial reviewer is the auditor archetype (Archetype A).
 
 ---
 

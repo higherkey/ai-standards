@@ -161,11 +161,13 @@ function describeEdit(s, kind, rel, { cur, baseBuf, newBuf, inferred }) {
 
 // ---------- per-file pipeline ----------
 
-const abs = (s, rel) => path.join(s.root, rel);
-const basePath = (s, rel) => path.join(s.root, BASE_DIR, rel);
+// rel is the LOGICAL managed name (manifest keys, known hashes/bases). The layout maps it to a disk path under the root;
+// snapshots, backups and sidecars use the disk path so they sit next to the real file.
+const abs = (s, rel) => path.join(s.root, s.disk(rel));
+const basePath = (s, rel) => path.join(s.root, BASE_DIR, s.disk(rel));
 
 function backup(s, rel) {
-  writeFile(path.join(s.root, BACKUP_DIR, rel), fs.readFileSync(abs(s, rel)));
+  writeFile(path.join(s.root, BACKUP_DIR, s.disk(rel)), fs.readFileSync(abs(s, rel)));
 }
 
 function install(s, rel, buf) {
@@ -198,7 +200,7 @@ async function resolveEdited(s, rel, info, prevHash, newHash) {
     if (!s.interactive && kind !== 'merge') {
       writeFile(abs(s, rel) + SIDECAR, newBuf);
       s.counts.conflicts++;
-      note(s, rel, `kept your version (${kind === 'unknown' ? 'no merge base' : 'merge conflicts'}${via}); package version written to ${rel}${SIDECAR}`);
+      note(s, rel, `kept your version (${kind === 'unknown' ? 'no merge base' : 'merge conflicts'}${via}); package version written to ${s.disk(rel)}${SIDECAR}`);
     } else {
       s.counts.kept++;
       note(s, rel, 'kept your version');
@@ -308,13 +310,15 @@ async function pruneFile(s, rel, prevHash, knownList) {
 
 export async function syncTarget(target, ctx) {
   const { sourceDir, targetDir, force = false, interactive = false, ask = null, log } = ctx;
-  const root = path.join(targetDir, target.rootDir);
+  const layout = target.layouts[ctx.global ? 'global' : 'project'];
+  const root = path.join(targetDir, layout.rootDir);
+  const display = ctx.global ? displayPath(root) : `${layout.rootDir}/`;
   const managed = target.managed(fsSource(sourceDir));
   const prev = readManifest(root);
   const prevFiles = prev.files || {};
   const known = loadKnownHashes(sourceDir)[target.name] || {};
   const s = {
-    name: target.name, root, sourceDir, log, force, interactive: interactive && Boolean(ask), ask, sticky: {}, notes: [],
+    name: target.name, root, disk: layout.diskPath, sourceDir, log, force, interactive: interactive && Boolean(ask), ask, sticky: {}, notes: [],
     counts: { added: 0, updated: 0, merged: 0, kept: 0, conflicts: 0, removed: 0 }
   };
 
@@ -338,17 +342,24 @@ export async function syncTarget(target, ctx) {
   };
   writeFile(path.join(root, MANIFEST_NAME), JSON.stringify(manifest, null, 2) + '\n');
 
-  report(s, target, managed);
+  layout.finalize?.({ root, log, display });
+  report(s, display, managed);
 }
 
-function report(s, target, managed) {
+/** Shorten paths under the home directory to ~/..., else return the absolute path (with trailing separator). */
+function displayPath(dir) {
+  const rel = path.relative(os.homedir(), dir);
+  return rel && !rel.startsWith('..') && !path.isAbsolute(rel) ? `~/${rel.split(path.sep).join('/')}/` : `${dir}${path.sep}`;
+}
+
+function report(s, display, managed) {
   const { counts: c } = s;
   const extras = managed.agents.length ? ` and ${managed.agents.length} subagents` : '';
-  s.log(`✅ [${s.name}] ${managed.skills.length} skills${extras} synchronized to ${target.rootDir}/.`);
+  s.log(`✅ [${s.name}] ${managed.skills.length} skills${extras} synchronized to ${display}.`);
   for (const line of s.notes) s.log(`ℹ️ [${s.name}] ${line}`);
   const parts = [`${c.updated} updated`, `${c.merged} merged`, `${c.kept} kept (edited)`, `${c.conflicts} conflicts`];
   if (c.added) parts.push(`${c.added} added`);
   if (c.removed) parts.push(`${c.removed} removed`);
   s.log(`✅ [${s.name}] ${parts.join(', ')}.`);
-  if (s.notes.length) s.log(`   Backups of replaced files: ${target.rootDir}/${BACKUP_DIR}/. Consider ignoring ${BACKUP_DIR}/ and *${SIDECAR}.`);
+  if (s.notes.length) s.log(`   Backups of replaced files: ${display}${BACKUP_DIR}/. Consider ignoring ${BACKUP_DIR}/ and *${SIDECAR}.`);
 }
