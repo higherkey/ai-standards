@@ -17,12 +17,14 @@ Before dispatching a subagent, evaluate the task against this decision matrix:
 Task Assessment
 ├─ Small (< 30 lines, 1 file, mechanical replace) ──> EXECUTE DIRECTLY IN PARENT
 └─ Bounded / High-Footprint / Exploratory ──────────> DELEGATE TO TIGHT-RAILS SUBAGENT
+    ├─ Narrow yes/no, choice, or score judgment ───> Tier: decision (optional, see below)
     ├─ Mechanical search / grep / syntax checks ───> Tier: fast
+    ├─ Targeted edits with known content, no running/searching ─> Tier: fast, medium effort
     ├─ Code edits / test writing / deep audit ─────> Tier: standard (default)
     └─ Complex multi-file architectural planning ──> Tier: deep (rare, bounded)
 ```
 
-- **Heuristic Primacy:** Model tiers (fast / standard / deep) and archetypes below are illustrative guidelines. The parent agent has full metacognitive allowance to adjust model tier, adapt archetypes, or execute directly based on task complexity.
+- **Heuristic Primacy:** Model tiers (decision / fast / standard / deep) and archetypes below are illustrative guidelines. The parent agent has full metacognitive allowance to adjust model tier, adapt archetypes, or execute directly based on task complexity.
 - **Stop-the-Fanout Rule:** Never spawn subagents for trivial edits or single command checks where delegation latency and prompt initialization exceed direct execution cost.
 
 ### Tier Mapping
@@ -33,6 +35,11 @@ Skills speak in capability tiers. Map them to the host tool's concrete models:
 | fast | `flash_lite` | `haiku` |
 | standard | `flash` | `sonnet` |
 | deep | `pro` | `opus` |
+
+### Optional Decision Tier (System One)
+If the environment has a decision-model capability installed (for example a `decision-models` skill that calls models such as d1, elephant, mammoth, Jev, or a decider, with its API key configured), use it below the fast tier for narrow judgments: triage and routing, "which files matter", relevance filtering of logs or tool output, and spec-drift checks. Such models return probabilities, not prose or tool calls, so they never replace a subagent that must read, edit, or run anything. If no such capability is set up, skip this tier silently.
+- Send the smallest sufficient excerpt, never secrets, credentials, `.env` contents, or personal data.
+- Treat results as advisory. On low confidence (under about 0.6) or a decisive call, verify yourself or escalate once to a stronger decision model; never use one as the sole gate on an irreversible action.
 
 On Claude, each archetype below is installed as a named subagent (`rails-*`) with its model and effort preconfigured; dispatch it by name. Doubt-driven development's adversarial reviewer is the auditor archetype (Archetype A).
 

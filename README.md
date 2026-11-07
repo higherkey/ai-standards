@@ -55,7 +55,7 @@ This repository contains the centralized source of truth (SSOT) for personal AI 
    ```bash
    npm install --save-dev @higherkey/ai-standards
    ```
-   *(Alternative without .npmrc: `npm install --save-dev github:higherkey/ai-standards#v0.4.0`)*
+   *(Alternative without .npmrc: `npm install --save-dev github:higherkey/ai-standards#v0.5.0`)*
 3. **Choose your target(s)** and sync (see [Targets](#targets) below):
    ```bash
    npx ai-standards-sync --agent claude
@@ -69,7 +69,7 @@ This repository contains the centralized source of truth (SSOT) for personal AI 
    ```
    *Note: The CLI tool runs as a dependency-free copy helper. If run during postinstall with no target chosen, it warns and exits 0. It also fails safe (warn but exit 0) in CI/CD environments if permission errors occur.*
 5. **Initialize & Commit:** Run `npm run sync-ai` once, then commit the generated folders to Git.
-6. **Integrate localization:** Add project-specific rules in the right place for your target (see the per-target outputs below). The Antigravity rules file is written once and not overwritten unless you pass `--force`; the Claude rules file is always refreshed, so keep local rules in `CLAUDE.md`.
+6. **Integrate localization:** Add project-specific rules in the right place for your target (see the per-target outputs below). Both rules files are managed like any other file (see [Upgrades and local edits](#upgrades-and-local-edits)), so your edits survive upgrades; for Claude, still prefer keeping local rules in `CLAUDE.md`.
 
 #### Instruction for AI Agents
 If you are an AI assistant tasked with setting up or updating these standards in this project, do not write custom download scripts. Instead, run the help menu to view instructions and verify the setup:
@@ -109,11 +109,26 @@ npx ai-standards-sync --agent all --yes
 
 | Target | Skills | Rules | Extras |
 |---|---|---|---|
-| `antigravity` | `.agents/skills/` | `.agents/AGENTS.md` (core `AGENTS.md` plus an Antigravity adapter). Written once; `--force` overwrites. Put local rules in this file. | none |
-| `claude` | `.claude/skills/` | `.claude/rules/ai-standards.md` (core plus a Claude adapter). Always refreshed on sync. Put local rules in `CLAUDE.md`, which loads alongside it. | `.claude/agents/rails-*.md` subagents |
+| `antigravity` | `.agents/skills/` | `.agents/AGENTS.md` (core `AGENTS.md` plus an Antigravity adapter). Updated on upgrade like any managed file; local edits are merged or kept. Put local rules in this file. | none |
+| `claude` | `.claude/skills/` | `.claude/rules/ai-standards.md` (core plus a Claude adapter). Updated on upgrade like any managed file. Put local rules in `CLAUDE.md`, which loads alongside it. | `.claude/agents/rails-*.md` subagents |
 
-- Each target writes `.ai-standards-manifest.json` in its install root (`.agents/` or `.claude/`) listing what it installed. On the next sync it prunes only files it previously installed that dropped out of the package; your own skills, agents, and settings are never touched.
+- Each target writes `.ai-standards-manifest.json` in its install root (`.agents/` or `.claude/`) listing what it installed (with content hashes). Only files listed there are ever updated or pruned; your own skills, agents, and settings are never touched.
 - Personal `~/.claude/skills` entries shadow same-named project skills in Claude Code.
+
+### Upgrades and local edits
+
+Every managed file (each file under a skill, Claude subagents, the rules file) is tracked by content hash (line endings and BOM ignored) and a snapshot of what was last installed in `.ai-standards-base/` inside the install root. On sync:
+
+- **Unedited** files are overwritten with the new version. Files from older releases that predate the snapshot are recognised through `known-hashes.json`.
+- **Edited, package unchanged:** your file is kept.
+- **Edited and the package changed:** a 3-way merge (`git merge-file`) is applied when it is clean; on conflicts, or when there is no snapshot, your file is kept and the package version is written beside it as `<file>.ai-standards-new`. Interactive runs ask instead (merge / keep mine / new version / conflict markers, with `!` to apply the answer to the remaining files of that kind).
+- **Deleted locally:** not restored non-interactively (you get a warning); interactive runs ask.
+- **Removed from the package:** deleted if unedited; if you edited it, it is kept (and no longer managed).
+- Before a user-edited file is replaced (new version, merge, conflict markers, `--force`), a copy goes to `.ai-standards-backup/<path>`.
+- `--force` takes the package version for every edited file (with backups) without prompting.
+
+In projects you own, commit `.ai-standards-base/` so teammates share the merge base, and ignore `.ai-standards-backup/` and `*.ai-standards-new`. Maintainers regenerate `known-hashes.json` after tagging a release with `node scripts/build-known-hashes.js`.
+
 
 ---
 
@@ -136,6 +151,9 @@ Add these lines to `.git/info/exclude` in each external clone:
 /.claude/agents/rails-*.md
 /.claude/rules/ai-standards.md
 /.claude/.ai-standards-manifest.json
+/.claude/.ai-standards-base/
+/.claude/.ai-standards-backup/
+*.ai-standards-new
 /.ai-standards.json
 /docs/branch-notes/
 /task.md

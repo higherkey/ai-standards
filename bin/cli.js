@@ -19,7 +19,8 @@ Usage:
 Options:
   -a, --agent      Tool(s) to sync: ${targetNames.join(', ')}, or "all" (comma-separated list allowed)
   -y, --yes        Confirm "all" without prompting (required when non-interactive)
-  -f, --force      Overwrite the existing .agents/AGENTS.md (will lose local overrides)
+  -f, --force      Replace every locally edited managed file with the package version
+                   (your copy is saved under .ai-standards-backup/ first)
   -t, --target     Target directory (default: current working directory)
   -h, --help       Show this help message
 
@@ -29,6 +30,15 @@ Agent resolution (first match wins):
   3. A previous Antigravity install (.agents/skills/plan-review/SKILL.md)
   4. An interactive prompt (TTY only; the choice is saved to ${CONFIG_NAME})
   There is no default. Without a choice the CLI exits with an error.
+
+Upgrades and local edits:
+  Each sync compares every managed file (skills, Claude subagents, the rules file)
+  with what it last installed (.ai-standards-base/). Unedited files are updated.
+  Edited files whose upstream is unchanged are kept. If both changed, a 3-way
+  merge (git merge-file) is applied when clean; otherwise (or with no merge base)
+  your file is kept and the package version is written next to it as
+  <file>.ai-standards-new. Interactive runs prompt instead. Replaced files are
+  backed up to .ai-standards-backup/. Files you add yourself are never touched.
 
 Targets:
 ${targetNames.map((n) => `  ${n.padEnd(12)} ${targets[n].describe}`).join('\n')}
@@ -41,8 +51,9 @@ Best Practices:
   and commit ${CONFIG_NAME} so every install knows which tool(s) to sync.
 
   Git hygiene:
-    Projects you own: commit the installed files so teammates and CI get the
-    same standards.
+    Projects you own: commit the installed files (including .ai-standards-base/,
+    the merge base) so teammates and CI get the same standards. Ignore
+    .ai-standards-backup/ and *.ai-standards-new.
     Contribution mode (repos owned by someone else): exclude only the managed
     paths in that clone's .git/info/exclude. Not a global excludes file: it
     would also hide branch notes in your own repos.
@@ -52,6 +63,9 @@ Best Practices:
       /.claude/agents/rails-*.md
       /.claude/rules/ai-standards.md
       /.claude/.ai-standards-manifest.json
+      /.claude/.ai-standards-base/
+      /.claude/.ai-standards-backup/
+      *.ai-standards-new
       /.ai-standards.json
       /docs/branch-notes/
       /task.md
@@ -167,9 +181,9 @@ async function run() {
       console.log(`✅ Saved choice to ${CONFIG_NAME}.`);
     }
 
-    const ctx = { sourceDir, targetDir: options.target, force: options.force, log: console.log };
+    const ctx = { sourceDir, targetDir: options.target, force: options.force, interactive: isInteractive(inHook), ask, log: console.log };
     console.log('🔄 Synchronizing AI rules & skills...');
-    for (const name of selected) targets[name].install(ctx);
+    for (const name of selected) await targets[name].install(ctx);
     console.log('🎉 AI Rules & Skills synchronized successfully!');
   } catch (error) {
     console.error(`❌ Error synchronizing AI rules: ${error.message}`);

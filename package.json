@@ -1,6 +1,6 @@
 {
   "name": "@higherkey/ai-standards",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Centralized AI development standards, workflows, and rules, synced to multiple AI coding tools (Antigravity, Claude Code).",
   "type": "module",
   "bin": {
@@ -11,6 +11,8 @@
     "AGENTS.md",
     "bin",
     "targets",
+    "known-hashes.json",
+    "known-bases",
     "README.md"
   ],
   "publishConfig": {
