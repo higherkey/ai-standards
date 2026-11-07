@@ -9,7 +9,7 @@ This repository contains the centralized source of truth (SSOT) for personal AI 
 - `AGENTS.md`: Global behavior guidelines, engineering standards, and execution constraints (tool-neutral).
 - `targets/`: Per-tool adapters and extras (e.g. the Claude `rails-*` subagents).
 - `bin/`: The `ai-standards-sync` CLI.
-- `skills/`: 23 production-grade, token-efficient engineering skills:
+- `skills/`: 24 production-grade, token-efficient engineering skills:
   - **Workflow & Delivery:**
     - `resolve-issue/`: Goal-driven autonomous issue resolution with upfront PR vs. Merge triage, runtime verification, and manual step disclosure.
     - `plan-review/`: Audits implementation plans for errors/opportunities and domain skill alignment before coding.
@@ -20,6 +20,7 @@ This repository contains the centralized source of truth (SSOT) for personal AI 
     - `create-github-issue/`: Issue creation guidelines with project board integration and REST API relationships.
     - `git-branch-cleanup/`: Synchronizes local branch list by pruning remote-deleted branches (manual invocation only).
     - `github-commands/`: Non-interactive `gh` CLI and REST API cheatsheet.
+    - `decision-models/`: Optional System One decision models (d1, elephant, Jev, pplx-decider) via OpenRouter for cheap yes/no, choice, and score judgments; needs `OPENROUTER_API_KEY` (a ~$5 credit goes a long way).
   - **Reasoning, Testing & Debugging:**
     - `doubt-driven-development-slim/`: 5-step adversarial evaluation cycle for non-trivial decisions.
     - `test-driven-development-slim/`: Red-Green-Refactor loop and boundary-only mocking.
