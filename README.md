@@ -47,8 +47,9 @@ This repository contains the centralized source of truth (SSOT) for personal AI 
    Add a `.npmrc` file at the root of your project:
    ```ini
    @higherkey:registry=https://npm.pkg.github.com
+   //npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}
    ```
-   *(Note: Since `@higherkey/ai-standards` is a public package, downloading does not require private auth tokens).*
+   *(Note: GitHub Packages requires a token with the `read:packages` scope, even for public packages. Locally, add the scope with `gh auth refresh -h github.com -s read:packages` and set `NODE_AUTH_TOKEN` from `gh auth token`; in GitHub Actions, use `secrets.GITHUB_TOKEN` with `packages: read`. The git-tag install below needs no token.)*
 
 2. **Install the package:**
    ```bash
