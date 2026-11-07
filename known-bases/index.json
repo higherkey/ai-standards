@@ -2,12 +2,14 @@
   "antigravity": {
     "AGENTS.md": [
       "e4ded4641fe60264a4dfa58527ae79eb0dd8549f204cb3d7352730b3b17c3162",
-      "11116eccb25eed7c772cc320bb0a56f35e999035eff1676780a500fac851baef"
+      "11116eccb25eed7c772cc320bb0a56f35e999035eff1676780a500fac851baef",
+      "5a132031db28ceac8ccb37bb244a4df3f821f572890539959ff7f472598d9d7c"
     ]
   },
   "claude": {
     "rules/ai-standards.md": [
-      "bd8b14bd3afff07973bf26779bd5f55f6e06611fa41b3fa7b009e877a8a7fa35"
+      "bd8b14bd3afff07973bf26779bd5f55f6e06611fa41b3fa7b009e877a8a7fa35",
+      "e91d20693cd9473cb7c970c1357cf04cb5be49725d23441757b75286040edbd7"
     ]
   }
 }
