@@ -1,6 +1,6 @@
 ---
 name: frontend-ui-engineering-slim
-description: "Production-grade UI engineering guidelines: modular architecture, CSS hygiene, layout stability, and responsive interaction"
+description: "Production-grade UI engineering guidelines: modular architecture, CSS hygiene, layout stability, and responsive interaction. Use when building or modifying frontend components, CSS, or layouts."
 ---
 
 # Frontend UI Engineering (`/frontend-ui-engineering-slim`)
@@ -31,8 +31,8 @@ High-density engineering standards for building responsive, modular, and perform
 
 ### Design Tokens & Layout Hygiene
 - **Token Consistency:** Use design system tokens (CSS custom properties) for colors, spacing, typography, and elevations rather than arbitrary magic pixel values.
-- **Touch Targets:** Interactive targets (buttons, links, toggles) must meet the minimum physical touch target of $44 \times 44\text{px}$ on touch/mobile viewports.
-- **Responsive Fluidity:** Build mobile-first. Test layout integrity across standard breakpoints ($360\text{px}$, $768\text{px}$, $1024\text{px}$, $1440\text{px}$).
+- **Touch Targets:** Interactive targets (buttons, links, toggles) must meet the minimum physical touch target of 44 x 44px on touch/mobile viewports.
+- **Responsive Fluidity:** Build mobile-first. Test layout integrity across standard breakpoints (360px, 768px, 1024px, 1440px).
 
 ---
 
@@ -57,6 +57,6 @@ High-density engineering standards for building responsive, modular, and perform
 - [ ] Zero instances of `!important` across all stylesheets.
 - [ ] Zero inline `style="..."` attributes used.
 - [ ] All async subscriptions and DOM listeners are torn down on unmount.
-- [ ] Touch targets are $\ge 44 \times 44\text{px}$ on mobile viewports.
+- [ ] Touch targets are >= 44 x 44px on mobile viewports.
 - [ ] Images/media elements have explicit aspect ratios or bounding boxes.
-- [ ] UI tested across mobile ($360\text{px}$) and desktop ($1024\text{px}+$) widths.
+- [ ] UI tested across mobile (360px) and desktop (1024px+) widths.

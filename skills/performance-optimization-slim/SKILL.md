@@ -1,6 +1,6 @@
 ---
 name: performance-optimization-slim
-description: "Performance optimization methodology: measurement-first profiling, main thread yielding, hot-path allocation reduction, and memory leak prevention"
+description: "Performance optimization methodology: measurement-first profiling, main thread yielding, hot-path allocation reduction, and memory leak prevention. Use when investigating slowness, latency, memory growth, or UI jank."
 ---
 
 # Performance Optimization (`/performance-optimization-slim`)
@@ -25,10 +25,10 @@ baseline        bottleneck     root cause delta         test/monitor
 
 ## 2. Frontend & Main Thread Optimization
 
-### Interaction to Next Paint (INP $\le 200\text{ms}$)
-- **Break Up Long Tasks ($> 50\text{ms}$):** Yield the main thread between heavy processing steps using `scheduler.yield()` or `setTimeout(0)`. Offload heavy math or parsing to Web Workers.
+### Interaction to Next Paint (INP <= 200ms)
+- **Break Up Long Tasks (> 50ms):** Yield the main thread between heavy processing steps using `scheduler.yield()` or `setTimeout(0)`. Offload heavy math or parsing to Web Workers.
 - **Prevent Layout Thrashing:** Never interleave DOM style reads (`offsetWidth`, `getBoundingClientRect`) with DOM writes (`style.width = ...`). Read first, write together in `requestAnimationFrame`.
-- **List Virtualization:** Any collection or table rendering $> 100$ complex items must use windowing/virtualization to keep DOM nodes minimal.
+- **List Virtualization:** Any collection or table rendering > 100 complex items must use windowing/virtualization to keep DOM nodes minimal.
 
 ---
 
@@ -56,7 +56,7 @@ baseline        bottleneck     root cause delta         test/monitor
 
 - [ ] Baseline performance measured and recorded before code changes.
 - [ ] Profiler trace confirms the specific bottleneck being targeted.
-- [ ] No long tasks ($> 50\text{ms}$) freezing UI interaction.
+- [ ] No long tasks (> 50ms) freezing UI interaction.
 - [ ] Zero N+1 query patterns introduced in data fetching paths.
 - [ ] Caches have bounded size limits and TTL expiration.
 - [ ] Verification measurement proves measurable improvement under identical test load.

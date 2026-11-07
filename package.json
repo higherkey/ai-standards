@@ -1,7 +1,7 @@
 {
   "name": "@higherkey/ai-standards",
-  "version": "0.3.0",
-  "description": "Centralized AI development standards, workflows, and rules.",
+  "version": "0.4.0",
+  "description": "Centralized AI development standards, workflows, and rules, synced to multiple AI coding tools (Antigravity, Claude Code).",
   "type": "module",
   "bin": {
     "ai-standards-sync": "./bin/cli.js"
@@ -10,6 +10,7 @@
     "skills",
     "AGENTS.md",
     "bin",
+    "targets",
     "README.md"
   ],
   "publishConfig": {
@@ -29,7 +30,8 @@
     "workflows",
     "agents",
     "antigravity",
-    "gemini"
+    "gemini",
+    "claude"
   ],
   "author": "higherkey",
   "license": "MIT",

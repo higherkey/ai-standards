@@ -1,6 +1,6 @@
 ---
 name: database-and-migrations-slim
-description: "Zero-downtime database migration strategies, non-blocking indexing, connection pool safety, and query locking prevention"
+description: "Zero-downtime database migration strategies, non-blocking indexing, connection pool safety, and query locking prevention. Use when changing database schemas, writing migrations, adding indexes, or tuning queries."
 ---
 
 # Database & Migrations (`/database-and-migrations-slim`)
@@ -21,7 +21,7 @@ Add nullable new column     App writes both old/new    Migrate historical rows  
 ### The 4 Phases:
 1. **Expand (Release 1):** Add the new column as nullable, or create the new table. No existing application queries are broken.
 2. **Dual-Write (Release 2):** Update the application to write to both the old and new columns simultaneously while still reading from the old.
-3. **Backfill (Async Job):** Migrate historical data in small, rate-limited batches ($\le 1,000$ rows per transaction) to prevent table locking and transaction log bloat.
+3. **Backfill (Async Job):** Migrate historical data in small, rate-limited batches (<= 1,000 rows per transaction) to prevent table locking and transaction log bloat.
 4. **Contract (Release 3/4):** Switch the application to read and write exclusively from the new column. In a subsequent deployment, drop the old column.
 
 ---

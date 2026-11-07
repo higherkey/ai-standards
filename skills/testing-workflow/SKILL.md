@@ -1,6 +1,6 @@
 ---
 name: testing-workflow
-description: "Guidelines and requirements for writing, running, and verifying unit/integration tests"
+description: "Guidelines and requirements for writing, running, and verifying unit/integration tests. Use when writing, running, or verifying tests before committing or merging."
 ---
 
 # Testing Workflow & Standards
@@ -40,4 +40,4 @@ For every new feature or refactor, coverage must be verified:
 ---
 
 ## 4. Peer Review Integration
-Verification of test runs and coverage reports serves as a gate in the `/peer-review` process. No code review can be completed without confirming a successful test suite execution.
+Verification of test runs and coverage reports serves as a gate in the `/peer-review-with-quality` process. No code review can be completed without confirming a successful test suite execution.

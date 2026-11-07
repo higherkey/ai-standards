@@ -1,6 +1,6 @@
 ---
 name: security-and-hardening-slim
-description: "Application security standards: OWASP Top 10 defense, trust boundaries, injection prevention, and secret hygiene"
+description: "Application security standards: OWASP Top 10 defense, trust boundaries, injection prevention, and secret hygiene. Use when handling authentication, user input, secrets, data access, or other security-sensitive code."
 ---
 
 # Security & Hardening (`/security-and-hardening-slim`)

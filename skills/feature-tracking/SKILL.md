@@ -1,6 +1,6 @@
 ---
 name: feature-tracking
-description: "Maintain a running branch notes document and manage the continuous 4a/4b/4c issue pipeline on feature branches"
+description: "Maintain a running branch notes document and manage the continuous 4a/4b/4c issue pipeline on feature branches. Use when working on a conventionally prefixed branch (feat/, fix/, chore/) that needs branch notes."
 ---
 
 # Branch Notes & Continuous Feature Tracking Workflow
@@ -16,7 +16,7 @@ Whenever you are working on a branch created with a **conventional prefix** (e.g
   - Example: For branch `feat/room-concurrency`, the file is `docs/branch-notes/feat-room-concurrency-notes.md`.
 - **Trigger**: Initialize this document **immediately** upon creating or switching to a new prefixed branch.
 - **Persistence**: Committed to the branch. Cleared from `main` automatically via GitHub Actions cleanup.
-- **Local Exclusions**: When working in external repositories (contribution mode), configure `.git/info/exclude` for `docs/branch-notes/` to prevent committing local work artifacts.
+- **Local Exclusions**: Branch notes are committed by default. Only in repositories owned by someone else (contribution mode), add `docs/branch-notes/` to that clone's `.git/info/exclude`, never to a global excludes file. Where the user is a primary contributor, ask once per repo whether the owner wants branch notes committed.
 
 ---
 
@@ -75,7 +75,7 @@ The agent MUST present the status of all `4a`, `4b`, and `4c` items and check in
 
 ## 5. Metacognitive Dynamic Scaling
 
-Apply the foundation principles from `GEMINI.md` / `AGENTS.md`:
+Apply the foundation principles from the project rules file (`AGENTS.md`):
 - **Heuristics Over Rigid Examples**: Use architectural judgment to classify items into 4b (quick win) vs 4c (defer). Do not follow mechanical checklists when task context dictates otherwise.
 - **Safety Hierarchy**: **Data Integrity > System Safety > Contract Correctness > Token/Context Efficiency > Speed**.
 - **Minimal Token Waste**: Write short, targeted bullets. Never rewrite the entire document when appending a single discovery or issue.

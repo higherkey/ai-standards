@@ -1,6 +1,6 @@
 ---
 name: accessibility-and-a11y-slim
-description: "Web accessibility standards: WCAG 2.2 AA compliance, semantic HTML, keyboard focus trapping, and accessible labeling"
+description: "Web accessibility standards: WCAG 2.2 AA compliance, semantic HTML, keyboard focus trapping, and accessible labeling. Use when building or reviewing forms, dialogs, navigation, or any interactive UI for WCAG compliance."
 ---
 
 # Accessibility & a11y (`/accessibility-and-a11y-slim`)
@@ -48,9 +48,9 @@ Never polyfill native browser behaviors with `<div>` and ARIA when native HTML e
 ## 4. Color, Contrast & Motion
 
 - **Contrast Ratios (WCAG AA):**
-  - Normal text ($< 18\text{pt}$ regular): Contrast ratio $\ge 4.5:1$ against background.
-  - Large text ($\ge 18\text{pt}$ or $\ge 14\text{pt}$ bold): Contrast ratio $\ge 3:1$.
-  - UI components and graphical boundaries: Contrast ratio $\ge 3:1$.
+  - Normal text (< 18pt regular): Contrast ratio >= 4.5:1 against background.
+  - Large text (>= 18pt or >= 14pt bold): Contrast ratio >= 3:1.
+  - UI components and graphical boundaries: Contrast ratio >= 3:1.
 - **Not Color Alone:** Never use color as the sole indicator of state (e.g. green/red for success/error). Always pair color with an icon, badge text, or pattern.
 - **Reduced Motion:** Wrap non-essential animations and transitions in `@media (prefers-reduced-motion: reduce)`.
 
@@ -62,6 +62,6 @@ Never polyfill native browser behaviors with `<div>` and ARIA when native HTML e
 - [ ] No `outline: none` without high-contrast `:focus-visible` ring.
 - [ ] Icon-only buttons have explicit `aria-label` and `aria-hidden="true"` on SVGs.
 - [ ] Form inputs have associated `<label>` elements.
-- [ ] Text contrast meets minimum $\ge 4.5:1$ (tested via color contrast tool).
+- [ ] Text contrast meets minimum >= 4.5:1 (tested via color contrast tool).
 - [ ] Modals trap focus and restore focus on dismissal.
 - [ ] Reduced motion media query respected for UI animations.

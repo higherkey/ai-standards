@@ -1,6 +1,6 @@
 ---
 name: sonarqube-review
-description: "How to complete SonarQube quality gate checks, issue search, and status transitions using the Web API and MCP tools"
+description: "How to complete SonarQube quality gate checks, issue search, and status transitions using the Web API and MCP tools. Use when checking SonarQube/SonarCloud quality gates or triaging static analysis issues."
 ---
 
 # SonarQube Review Workflow
@@ -30,37 +30,37 @@ When conducting a SonarQube review, systematically audit the static analysis fin
 
 ## 2. CLI Command Reference (SonarScanner)
 To run a new scan, execute from the repository root:
-```powershell
+```bash
 sonar-scanner -Dsonar.projectKey=[PROJECT_KEY] -Dsonar.sources=.
 ```
 
 ---
 
 ## 3. MCP Server Tool Reference
-Use these native tools to programmatically inspect and manage issues:
+Use the SonarQube MCP server tools to programmatically inspect and manage issues. Tool names vary by host: `mcp_sonarqube_*` on Antigravity, `mcp__<server>__*` on Claude. Pick the tool by capability:
 
-| Tool | Purpose |
-|------|---------|
-| `mcp_sonarqube_search_my_sonarqube_projects` | Search and discover project keys |
-| `mcp_sonarqube_search_sonar_issues_in_projects` | Search issues filtered by project, severity, or PR |
-| `mcp_sonarqube_get_project_quality_gate_status` | Check if project or PR quality gate passes |
-| `mcp_sonarqube_get_component_measures` | Query metrics like complexity, lines of code, and coverage |
-| `mcp_sonarqube_change_sonar_issue_status` | Transition an issue status (e.g., accept, falsepositive) |
-| `mcp_sonarqube_show_rule` | Load detailed descriptions and examples for a rule key |
+| Capability | Purpose |
+|------------|---------|
+| Search projects | Search and discover project keys |
+| Search issues | Search issues filtered by project, severity, or PR |
+| Get quality gate status | Check if project or PR quality gate passes |
+| Get component measures | Query metrics like complexity, lines of code, and coverage |
+| Change issue status | Transition an issue status (e.g., accept, falsepositive) |
+| Show rule | Load detailed descriptions and examples for a rule key |
 
 ---
 
 ## 4. Standard Review Process
-1. **Check Quality Gate:** Query the status using MCP:
+1. **Check Quality Gate:** Query the status using the quality gate status capability:
    ```
-   mcp_sonarqube_get_project_quality_gate_status(projectKey: "[KEY]")
+   get_project_quality_gate_status(projectKey: "[KEY]")
    ```
 2. **Retrieve Blocker Issues:** Fetch outstanding violations:
    ```
-   mcp_sonarqube_search_sonar_issues_in_projects(projects: ["[KEY]"], severities: ["HIGH", "BLOCKER"])
+   search_sonar_issues_in_projects(projects: ["[KEY]"], severities: ["HIGH", "BLOCKER"])
    ```
 3. **Transition Issues (Accept / False Positive):** If a finding is deemed acceptable or a false positive, update its state on the server:
    ```
-   mcp_sonarqube_change_sonar_issue_status(key: "[ISSUE_KEY]", status: ["accept"])
+   change_sonar_issue_status(key: "[ISSUE_KEY]", status: ["accept"])
    ```
 4. **Security Hotspots:** Note that `sonar-scanner` cannot resolve hotspots. Review and assign them via the Web UI dashboard or corresponding server Web API endpoints under `/web_api`.

@@ -1,6 +1,6 @@
 ---
 name: test-driven-development-slim
-description: "Test-Driven Development methodology: Red-Green-Refactor loop, boundary-only mocking, and deterministic test design"
+description: "Test-Driven Development methodology: Red-Green-Refactor loop, boundary-only mocking, and deterministic test design. Use when implementing new behavior or fixing bugs with tests first."
 ---
 
 # Test-Driven Development (`/test-driven-development-slim`)
