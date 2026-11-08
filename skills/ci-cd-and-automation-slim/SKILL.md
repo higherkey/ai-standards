@@ -41,7 +41,7 @@ PR Open ──> 1. Lint / Format ──> 2. Type Check ──> 3. Unit Tests ─
 
 For repositories using `/feature-tracking`:
 - **Branch Notes Validation:** Include a PR check (`validate-branch-notes.yml`) ensuring a branch notes document exists at `/docs/branch-notes/<normalized-branch>-notes.md` for all conventional prefixed branches (`feat/`, `fix/`, etc.).
-- **Automatic Pruning:** Include a merge-triggered action (`clean-branch-notes.yml`) to automatically delete `/docs/branch-notes/*.md` and commit the cleanup when merging into `main`.
+- **Automatic Pruning:** Include a merge-triggered action (`clean-branch-notes.yml`) to automatically delete `/docs/branch-notes/*.md` and commit the cleanup on the PR's base branch (the integration branch, e.g. `dev`), so notes never ride a promotion to `main`.
 
 ---
 

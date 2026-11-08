@@ -15,7 +15,7 @@ Whenever you are working on a branch created with a **conventional prefix** (e.g
   - Normalize the branch name by replacing `/`, `_`, and spaces with `-`.
   - Example: For branch `feat/room-concurrency`, the file is `docs/branch-notes/feat-room-concurrency-notes.md`.
 - **Trigger**: Initialize this document **immediately** upon creating or switching to a new prefixed branch.
-- **Persistence**: Committed to the branch. Cleared from `main` automatically via GitHub Actions cleanup.
+- **Persistence**: Committed to the branch. A GitHub Actions cleanup deletes them from the PR's base branch right after merge (e.g. `dev` in a `dev` → `main` release train), so they are gone before any promotion and the release branch never gets a cleanup commit of its own. The PR keeps them in its diff.
 - **Local Exclusions**: Branch notes are committed by default. Only in repositories owned by someone else (contribution mode), add `docs/branch-notes/` to that clone's `.git/info/exclude`, never to a global excludes file. Where the user is a primary contributor, ask once per repo whether the owner wants branch notes committed.
 
 ---
