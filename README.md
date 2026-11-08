@@ -37,7 +37,7 @@ This repository contains the centralized source of truth (SSOT) for personal AI 
     - `database-and-migrations-slim/`: Zero-downtime expand/contract migrations, non-blocking indexing, connection pool safety.
     - `security-and-hardening-slim/`: OWASP Top 10 defense, parameterized queries, IDOR defense, and secret hygiene.
     - `performance-optimization-slim/`: Measurement-first profiling, INP yielding, hot-path optimization, memory leak prevention.
-    - `ci-cd-and-automation-slim/`: Non-interactive pipeline invariants, reusable actions, SemVer release trains.
+    - `ci-cd-and-automation-slim/`: Pipeline invariants, release-train promotion, verified deploys, secret hygiene, runner budgets; `references/` holds GitHub Actions and deploy-target (Render, Cloudflare Pages, Supabase/Neon, GitHub Pages) specifics.
 
 ---
 
