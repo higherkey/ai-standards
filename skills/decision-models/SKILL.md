@@ -22,7 +22,7 @@ The scripts need Node 18+ and have no dependencies. `<skill-dir>` is this skill'
 Use a decision model when the question is **narrow, answerable from the text you give it, and cheaper to ask than to read**:
 - Triage or routing: "is this task trivial?", "which of these 40 files matter for X?"
 - Spec drift: "does this code satisfy this requirement?", "does this doc still match that file?"
-- Filtering: "is this log or tool output relevant to the task?"
+- Filtering: "is this log or tool output relevant to the task?" Drop or trim it before reading it yourself.
 - Sanity gates before an irreversible step (advisory only).
 
 Do NOT use one for writing or editing code, open-ended reasoning, anything that needs an explanation, or as the sole gate on an irreversible action. Treat results as **advisory evidence**; when a result is low confidence or decisive, verify by reading the relevant lines yourself.
@@ -37,7 +37,7 @@ Do NOT use one for writing or editing code, open-ended reasoning, anything that 
 | Does text A entail or support claim B | `pplx` | Entailment specialist; 262k context |
 | Large state (above ~65k tokens) | `jev` or `pplx` | 262k context; prefer scoping evidence down |
 
-Context caps are hard. Prefer **small, scoped evidence per question**; many questions can share one state in a single call. `node <skill-dir>/scripts/decide.mjs --models` prints the current table; model ids change, so update `scripts/sysone.mjs` when OpenRouter renames them.
+Context caps are hard. Prefer **small, scoped evidence per question**; many questions (up to 128) can share one state in a single call. `node <skill-dir>/scripts/decide.mjs --models` prints the current table; model ids change, so update `scripts/sysone.mjs` when OpenRouter renames them.
 
 ## How to call
 Ad-hoc yes/no (probability of "yes" per question):
