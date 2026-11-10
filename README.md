@@ -28,7 +28,7 @@ This repository contains the centralized source of truth (SSOT) for personal AI 
     - `testing-workflow/`: Unit and integration test execution and verification guidelines.
     - `sonarqube-review/`: SonarCloud quality gate compliance and static analysis triage.
   - **Frontend & Web Quality:**
-    - `frontend-ui-engineering-slim/`: Modular architecture, zero `!important`, zero inline styles, layout stability.
+    - `frontend-ui-engineering-slim/`: Modular architecture, zero `!important`, zero inline styles, spacing and density budgets, layout stability; `scripts/density-check.mjs` measures first-screen whitespace with Playwright.
     - `accessibility-and-a11y-slim/`: WCAG 2.2 AA compliance, semantic HTML, keyboard focus trapping.
     - `longest-contentful-paint-slim/`: Core Web Vitals LCP optimization (TTFB < 800ms, priority hinting, critical CSS).
     - `design-review/`: Comprehensive UI/UX, aesthetics, copy, and layout verification.
