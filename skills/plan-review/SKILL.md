@@ -29,7 +29,7 @@ Examine the technical domains involved in the proposed implementation and verify
 | Defect / Regression | `/debugging-and-error-recovery-slim` | Falsifiable hypotheses, regression tests before fix |
 | Business Domain Logic | `/test-driven-development-slim` | Red-Green-Refactor, mock only at I/O boundaries |
 | Form / Dialog / Nav | `/accessibility-and-a11y-slim` | Semantic HTML, focus trap/restore, contrast >= 4.5:1 |
-| Pipeline / Scripts | `/ci-cd-and-automation-slim` | Non-interactive flags (`--yes`), reusable actions, SemVer |
+| Pipeline / Scripts | `/ci-cd-and-automation-slim` | Non-interactive flags, least-privilege tokens, verified deploys, promotion guards, injection-safe inputs |
 
 ---
 
