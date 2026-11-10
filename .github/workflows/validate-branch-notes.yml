@@ -6,10 +6,14 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+
 jobs:
   validate-branch-notes:
     name: Check for Branch Notes Document
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     permissions:
       contents: read
     steps:
@@ -25,7 +29,7 @@ jobs:
           # Check if the branch has a conventional prefix
           if echo "$BRANCH" | grep -qE '^(feat|fix|chore|refactor|docs|test|perf|build|ci|style)/'; then
             # Normalize branch name: replace / and _ and spaces with -
-            NORMALIZED_NAME=$(echo "$BRANCH" | sed 's/[/_ ]/-/g')
+            NORMALIZED_NAME=$(echo "$BRANCH" | sed 's/[/_ ]/-/g' | tr '[:upper:]' '[:lower:]')
             NOTES_PATH="docs/branch-notes/${NORMALIZED_NAME}-notes.md"
             echo "Expected branch notes: $NOTES_PATH"
 

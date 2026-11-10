@@ -184,7 +184,7 @@ Never exclude all of `.claude/`, since it holds your own settings. To check a pa
 
 ## 3. CI/CD Pipeline Integration (GitHub Actions)
 
-We provide centralized reusable GitHub Actions workflows to enforce and manage branch notes in your projects.
+We provide centralized reusable GitHub Actions workflows to enforce and manage branch notes in your projects. Pin callers to a release tag (not `@main`) and bump the tag when you upgrade.
 
 ### A. Branch Notes Validation Workflow (`validate-branch-notes.yml`)
 Enforces that every pull request opened from a conventionally prefixed branch (e.g., `feat/`, `fix/`) contains its mandatory branch notes document under `docs/branch-notes/[normalized-branch]-notes.md` before it can be merged.
@@ -198,7 +198,7 @@ on:
 
 jobs:
   validate:
-    uses: higherkey/ai-standards/.github/workflows/validate-branch-notes.yml@main
+    uses: higherkey/ai-standards/.github/workflows/validate-branch-notes.yml@v0.5.0
 ```
 
 ### B. Branch Notes Cleanup Workflow (`clean-branch-notes.yml`)
@@ -216,7 +216,7 @@ jobs:
     if: github.event.pull_request.merged == true
     permissions:
       contents: write
-    uses: higherkey/ai-standards/.github/workflows/clean-branch-notes.yml@main
+    uses: higherkey/ai-standards/.github/workflows/clean-branch-notes.yml@v0.5.0
     with:
       base-branch: ${{ github.event.pull_request.base.ref }}
     secrets: inherit

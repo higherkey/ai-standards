@@ -3,14 +3,21 @@ on:
   workflow_call:
     inputs:
       base-branch:
-        description: 'The base branch to push cleanup to (e.g. main)'
+        description: 'The PR base (integration) branch to push cleanup to (e.g. main or dev)'
         required: false
         default: 'main'
         type: string
 
+permissions:
+  contents: read
+
 jobs:
   cleanup:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
+    concurrency:
+      group: clean-branch-notes-${{ inputs.base-branch }}
+      cancel-in-progress: false
     permissions:
       contents: write
     steps:
@@ -22,6 +29,7 @@ jobs:
 
       - name: Delete Branch Notes Files
         run: |
+          set -euo pipefail
           if [ -d "docs/branch-notes" ]; then
             echo "Checking for branch notes files to delete..."
             find docs/branch-notes -name "*-notes.md" -type f -delete
@@ -42,7 +50,10 @@ jobs:
           fi
 
       - name: Commit and Push Cleanup
+        env:
+          BASE: ${{ inputs.base-branch }}
         run: |
+          set -euo pipefail
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
@@ -50,7 +61,8 @@ jobs:
 
           if ! git diff --cached --exit-code --quiet; then
             git commit -m "chore: Clean up AI branch notes [skip ci]"
-            git push origin ${{ inputs.base-branch }}
+            git pull --rebase origin "$BASE"
+            git push origin "$BASE"
             echo "Changes committed and pushed successfully."
           else
             echo "No branch notes files found to clean up."

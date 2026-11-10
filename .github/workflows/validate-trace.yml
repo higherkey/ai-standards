@@ -4,6 +4,9 @@ name: Validate Feature Trace Document (Deprecated)
 on:
   workflow_call:
 
+permissions:
+  contents: read
+
 jobs:
   validate:
     uses: higherkey/ai-standards/.github/workflows/validate-branch-notes.yml@main

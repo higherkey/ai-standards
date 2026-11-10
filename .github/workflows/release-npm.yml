@@ -8,12 +8,12 @@ on:
 
 permissions:
   contents: read
-  packages: write
 
 jobs:
   test:
     name: Run Tests
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -30,6 +30,10 @@ jobs:
     name: Publish to GitHub Packages
     needs: test
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      packages: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
