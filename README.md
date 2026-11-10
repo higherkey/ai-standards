@@ -198,7 +198,7 @@ on:
 
 jobs:
   validate:
-    uses: higherkey/ai-standards/.github/workflows/validate-branch-notes.yml@v0.5.0
+    uses: higherkey/ai-standards/.github/workflows/validate-branch-notes.yml@v0.6.0
 ```
 
 ### B. Branch Notes Cleanup Workflow (`clean-branch-notes.yml`)
@@ -216,7 +216,7 @@ jobs:
     if: github.event.pull_request.merged == true
     permissions:
       contents: write
-    uses: higherkey/ai-standards/.github/workflows/clean-branch-notes.yml@v0.5.0
+    uses: higherkey/ai-standards/.github/workflows/clean-branch-notes.yml@v0.6.0
     with:
       base-branch: ${{ github.event.pull_request.base.ref }}
     secrets: inherit
