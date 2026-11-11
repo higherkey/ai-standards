@@ -20,7 +20,7 @@ Examine the technical domains involved in the proposed implementation and verify
 | Domain | Skill to Activate | Key Invariants to Verify in Plan |
 |---|---|---|
 | Risky / complex logic | `/doubt-driven-development-slim` | Adversarial checks, failure modes, bounded loops |
-| Frontend / UI / CSS | `/frontend-ui-engineering-slim` | Modularity, touch targets >= 44px, zero `!important`, zero inline styles |
+| Frontend / UI / CSS | `/frontend-ui-engineering-slim` | Modularity, touch targets >= 44px, zero `!important`, zero inline styles, spacing budgets (no stacked padding or full-screen sections) |
 | REST / GraphQL / RPC | `/api-and-interface-design-slim` | RFC 7807 error models, idempotency, backward compatibility |
 | DB / Schema / Migrations | `/database-and-migrations-slim` | Expand/contract pattern, non-blocking indexing, connection pool limits |
 | Auth / Data / Security | `/security-and-hardening-slim` | Parameterized queries, sanitization, secret hygiene, OWASP Top 10 |

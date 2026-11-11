@@ -32,6 +32,13 @@ Verify layout boundaries and responsive breakpoints:
 - **Mobile UX:** The hamburger menu must open, close, and navigate cleanly on mobile screens (<=768px). Check that text headers wrap gracefully without double-line breaks or overlapping.
 - **Desktop & Tablet:** Test viewports between 992px and 1200px (intermediate range) to ensure components do not clip and that horizontal grids scale smoothly.
 - **Global Spacing:** Ensure all margins, paddings, and card gaps use the global spacing tokens defined in the project's stylesheets.
+- **Density & Whitespace:** Over-spacing is the most common AI styling artifact. Check the budgets and anti-patterns in `/frontend-ui-engineering-slim` §3:
+  - Space inside a group is smaller than space between groups.
+  - Nested padding doesn't stack.
+  - No full-screen `min-height` on content sections or empty states.
+  - Mobile doesn't inherit desktop section spacing.
+
+  At 1366×768 and 360×800, the first screen must show the heading, the primary action, and the start of the content. Run `density-check.mjs` from that skill's `scripts/` folder and report each flag as fixed or intentional. "Looks clean" is not a pass if the user has to scroll to find the content.
 
 ---
 
