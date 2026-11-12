@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Claude Code PreToolUse hook (matcher: Bash).
 // Cheap pre-filter first; only commands that look destructive are sent to a decision model
-// (d1.1, ~$0.00001 per call, ~400 ms). If the model thinks it is irreversible/off-task, the user
+// (Perplexity Decider v1.2, ~$0.00001 per call, ~300 ms). If the model thinks it is irreversible/off-task, the user
 // is asked to confirm. Fails OPEN on any error, missing key, or timeout so it never blocks work.
 // Disable with DECISION_GUARD=off. Tune with GUARD_MODEL, GUARD_IRREVERSIBLE, GUARD_OFFTASK.
 import { existsSync, readFileSync } from "node:fs";
@@ -10,7 +10,8 @@ import { decide, noul } from "./sysone.mjs";
 const RISKY = [
   /\brm\s+(-[a-z]*\s+)*-[a-z]*[rf]/i, /\brm\s+.*\s-[a-z]*[rf]/i,
   /\brmdir\b.*\/s/i, /\bdel\b.*\/[sq]/i, /remove-item\b.*-recurse/i, /\bformat\s+[a-z]:/i,
-  /\bgit\s+(reset\s+--hard|clean\s+-[a-z]*[fdx]|checkout\s+(--\s|\.)|restore\s+(--source|\.)|branch\s+-D|stash\s+(drop|clear)|push\b.*(--force|-f\b|--delete))/i,
+  /\bgit\s+(reset\s+--hard|clean\s+-[a-z]*[fdx]|checkout\s+(--\s|\.)|restore\s+(--source|\.)|stash\s+(drop|clear)|push\b.*(--force|-f\b|--delete))/i,
+  /\bgit\s+branch\s+(-D|--delete\s+--force)\b/, // case-sensitive: lowercase -d only deletes merged branches
   /\b(drop|truncate)\s+(table|database|schema)\b/i, /\bdelete\s+from\b/i,
   /db:(reset|drop|wipe)|migrate:(reset|fresh)|prisma\s+migrate\s+reset|--accept-data-loss/i,
   /\b(docker\s+(system|volume)\s+prune|kubectl\s+delete|terraform\s+(destroy|apply)|npm\s+unpublish)\b/i,
@@ -22,7 +23,7 @@ const REGENERABLE = /^\s*rm\s+(-[a-z]+\s+)+(\.\/)?(node_modules|dist|build|out|c
 
 const IRREVERSIBLE = Number(process.env.GUARD_IRREVERSIBLE ?? 0.7);
 const OFFTASK = Number(process.env.GUARD_OFFTASK ?? 0.85);
-const MODEL = process.env.GUARD_MODEL ?? "d1";
+const MODEL = process.env.GUARD_MODEL ?? "decider";
 
 function lastUserPrompt(path) {
   try {
