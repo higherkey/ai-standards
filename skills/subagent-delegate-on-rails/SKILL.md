@@ -37,7 +37,7 @@ Skills speak in capability tiers. Map them to the host tool's concrete models:
 | deep | `pro` | `opus` |
 
 ### Optional Decision Tier (System One)
-If the environment has a decision-model capability installed (for example a `decision-models` skill that calls models such as d1, elephant, mammoth, Jev, or a decider, with its API key configured), use it below the fast tier for narrow judgments: triage and routing, "which files matter", relevance filtering of logs or tool output, and spec-drift checks. Such models return probabilities, not prose or tool calls, so they never replace a subagent that must read, edit, or run anything. If no such capability is set up, skip this tier silently.
+If the environment has a decision-model capability installed (for example a `decision-models` skill that calls models such as Perplexity Decider, d1-ultra, or mammoth, with its API key configured), use it below the fast tier for narrow judgments: triage and routing, "which files matter", relevance filtering of logs or tool output, and spec-drift checks. Such models return probabilities, not prose or tool calls, so they never replace a subagent that must read, edit, or run anything. If no such capability is set up, skip this tier silently.
 - Send the smallest sufficient excerpt, never secrets, credentials, `.env` contents, or personal data.
 - Treat results as advisory. On low confidence (under about 0.6) or a decisive call, verify yourself or escalate once to a stronger decision model; never use one as the sole gate on an irreversible action.
 

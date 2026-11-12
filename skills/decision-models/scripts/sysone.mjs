@@ -10,14 +10,18 @@ const LOG_FILE = process.env.DECISION_LOG ?? join(homedir(), ".ai-standards", "d
 const ENDPOINT = process.env.OPENROUTER_DECISIONS_URL ?? "https://openrouter.ai/api/alpha/decisions";
 
 // Short names -> OpenRouter ids. price = USD per million input tokens (output is free).
-// ctx = context in tokens. Verified against the live model list on 2026-11-06.
+// ctx = context in tokens. aa = Artificial Analysis Decision Index v2.1 score.
+// Ids, prices and caps verified against the live Decisions API on 2026-11-11.
+const DECIDER = { id: "perplexity/pplx-decider-v1.2", price: 0.020, ctx: 262144, aa: 69.8, note: "default; best on our hard spot-check (62/63) and cheapest" };
 export const MODELS = {
-  d1:       { id: "liquid/d1.1",                 price: 0.020, ctx: 65536,  note: "cheapest general workhorse; text+image" },
-  elephant: { id: "baseten/elephant-1",          price: 0.035, ctx: 16384,  note: "9B open peer to d1; short inputs only" },
-  mammoth:  { id: "baseten/mammoth-1",           price: 0.100, ctx: 16384,  note: "27B arbiter for hard AST/multi-branch calls; short inputs only" },
-  ultra:    { id: "liquid/d1-ultra",             price: 0.042, ctx: 32768,  note: "strongest d1; visual/layout judging" },
-  jev:      { id: "typesafe/jev-1.14",           price: 0.042, ctx: 262144, note: "large context; >32KB text uses slower long-context mode" },
-  pplx:     { id: "perplexity/pplx-decider-v1.2", price: 0.020, ctx: 262144, note: "factual entailment specialist; large context" },
+  decider:  DECIDER,
+  pplx:     DECIDER,
+  drex:     { id: "nace-ai/drex-max",            price: 0.060, ctx: 524288, aa: 72.6, maxQ: 16, note: "top of AA v2.1; 16 questions/call (auto-split); >~130k state is BM25-selected" },
+  mammoth:  { id: "baseten/mammoth-1",           price: 0.100, ctx: 16384,  aa: 71.4, note: "exact pattern/regex calls; best invariance; short inputs only" },
+  ultra:    { id: "liquid/d1-ultra",             price: 0.042, ctx: 32768,  aa: 70.6, note: "second opinion, other family; images; fastest of the strong set" },
+  elephant: { id: "baseten/elephant-1",          price: 0.035, ctx: 16384,  aa: 66.4, note: "fastest; weak on code details in our spot-check" },
+  jev:      { id: "typesafe/jev-1.14",           price: 0.042, ctx: 262144, aa: 66.2, note: "comparison only; 55-57/63 on our hard spot-check, unstable" },
+  d1:       { id: "liquid/d1.1",                 price: 0.020, ctx: 65536,  aa: null, note: "comparison only; not in AA; 54-55/63 on our hard spot-check, unstable" },
 };
 
 export const noul = (instructions, criteria) => ({ type: "noul", instructions, ...(criteria && { criteria }) });
@@ -26,7 +30,21 @@ export const score = (instructions, criteria) => ({ type: "score", instructions,
 
 export function modelId(name) { return MODELS[name]?.id ?? name; }
 
-export async function decide(model, state, questions, { timeoutMs = 60000, log = true, tag } = {}) {
+export async function decide(model, state, questions, opts = {}) {
+  // Some models cap questions per call; split, then merge answers and usage.
+  const entry = MODELS[model] ?? Object.values(MODELS).find((m) => m.id === model);
+  const maxQ = entry?.maxQ, keys = Object.keys(questions);
+  if (!maxQ || keys.length <= maxQ) return decideOnce(model, state, questions, opts);
+  const parts = [];
+  for (let i = 0; i < keys.length; i += maxQ)
+    parts.push(await decideOnce(model, state, Object.fromEntries(keys.slice(i, i + maxQ).map((k) => [k, questions[k]])), opts));
+  const sum = (f) => parts.reduce((n, p) => n + (p.usage?.[f] ?? 0), 0);
+  return { ...parts[0], answers: Object.assign({}, ...parts.map((p) => p.answers)),
+    usage: { ...parts[0].usage, input_tokens: sum("input_tokens"), cost: sum("cost") },
+    _latencyMs: parts.reduce((n, p) => n + p._latencyMs, 0), _calls: parts.length };
+}
+
+async function decideOnce(model, state, questions, { timeoutMs = 60000, log = true, tag } = {}) {
   const key = process.env.OPENROUTER_API_KEY;
   if (!key) throw new Error("OPENROUTER_API_KEY is not set");
   const id = modelId(model);
