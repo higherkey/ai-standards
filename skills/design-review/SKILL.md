@@ -24,6 +24,8 @@ Verify that the interface looks premium, modern, and aligned with the active pro
 - **Colors:** Check that only the brand's HSL/custom variables are used (avoid generic raw colors). Verify that neutral greys and brand accents are balanced.
 - **Typography:** Confirm that the project's official typography, fonts, and standard body scale are loaded and applied correctly.
 - **Micro-Animations:** Inspect hover transitions, active states, and sliding elements (like the navigation progress bar or drawer) for fluid motion and tactile response.
+- **Border Restraint:** Flag repeated `1px` outlines around containers with no meaningful boundary or state. Check whether spacing, typography, and alignment provide sufficient grouping while preserving necessary control boundaries and visible focus indicators. A `1px` border is not inherently a defect.
+- **Card Restraint:** Verify that each card represents a distinct item, action, or group. Flag unnecessary cards around paragraphs, metrics, or whole sections, especially nested cards; consider open sections, lists, rows, or tables. Replacing every outline with a shadow or tinted panel does not resolve excessive containment.
 
 ---
 
@@ -32,6 +34,7 @@ Verify layout boundaries and responsive breakpoints:
 - **Mobile UX:** The hamburger menu must open, close, and navigate cleanly on mobile screens (<=768px). Check that text headers wrap gracefully without double-line breaks or overlapping.
 - **Desktop & Tablet:** Test viewports between 992px and 1200px (intermediate range) to ensure components do not clip and that horizontal grids scale smoothly.
 - **Global Spacing:** Ensure all margins, paddings, and card gaps use the global spacing tokens defined in the project's stylesheets.
+- **Content Hierarchy:** Flag repetitive, equal-sized grid or flex boxes that flatten differences in content importance. Preserve equal grids for comparable items; vary grouping, size, and emphasis only when content warrants it, without arbitrary asymmetry.
 - **Density & Whitespace:** Over-spacing is the most common AI styling artifact. Check the budgets and anti-patterns in `/frontend-ui-engineering-slim` §3:
   - Space inside a group is smaller than space between groups.
   - Nested padding doesn't stack.

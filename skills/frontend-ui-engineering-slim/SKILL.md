@@ -34,6 +34,11 @@ High-density engineering standards for building responsive, modular, and perform
 - **Touch Targets:** Interactive targets (buttons, links, toggles) must meet the minimum physical touch target of 44 x 44px on touch/mobile viewports.
 - **Responsive Fluidity:** Build mobile-first. Test layout integrity across standard breakpoints (360px, 768px, 1024px, 1440px).
 
+### AI Visual Anti-Patterns
+- **Purposeful Borders:** Avoid outlining every container with the same `1px` border. Prefer spacing, typography, and alignment for grouping; use borders for meaningful boundaries, controls, or states. Preserve necessary control boundaries and visible focus indicators; border width alone is not an anti-pattern.
+- **Content-Led Layout:** Avoid repetitive, equal-sized grid or flex boxes that give unrelated content equal visual weight. Let content hierarchy determine grouping, size, and emphasis. Equal grids remain appropriate for genuinely comparable items; do not introduce arbitrary asymmetry or abandon Grid/Flexbox.
+- **Meaningful Cards:** Use a card when its content forms a distinct item, action, or group. Avoid wrapping every paragraph, metric, or section in a card, especially cards inside cards. Prefer open sections, lists, rows, or tables when they communicate the relationship more clearly; do not replace every border with a shadow or tinted panel.
+
 ---
 
 ## 3. Spacing & Density
