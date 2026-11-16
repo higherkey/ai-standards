@@ -1,6 +1,6 @@
 ---
 name: feature-tracking
-description: "Maintain a running branch notes document and manage the continuous 4a/4b/4c issue pipeline on feature branches. Use when working on a conventionally prefixed branch (feat/, fix/, chore/) that needs branch notes."
+description: "Maintain a running branch notes document and manage the continuous 4a/4b/4c issue pipeline on feature branches. Use when working on a conventionally prefixed branch (feat/, fix/, chore/) that needs branch notes, or when asked where a project stands: what it needs now, what is in progress, or whether it is ready for dev testing."
 ---
 
 # Branch Notes & Continuous Feature Tracking Workflow
@@ -22,10 +22,12 @@ Whenever you are working on a branch created with a **conventional prefix** (e.g
 
 ## 2. Document Structure (Ultra-Low Token Standard)
 
-Keep the document concise, high-signal, and bounded to 4 core sections:
+Keep the document concise, high-signal, and bounded to a status line plus 4 core sections:
 
 ```markdown
 # Branch Notes: [branch-name]
+
+> **Status:** in-progress | in-review (PR #N) | ready-for-dev-test | blocked | merged · **Next:** one line · **Updated:** YYYY-MM-DD
 
 ## 1. Discoveries & Deviations
 - Concise bullet points summarizing architectural discoveries, schema nuances, or deviations from the original plan.
@@ -79,3 +81,18 @@ Apply the foundation principles from the project rules file (`AGENTS.md`):
 - **Heuristics Over Rigid Examples**: Use architectural judgment to classify items into 4b (quick win) vs 4c (defer). Do not follow mechanical checklists when task context dictates otherwise.
 - **Safety Hierarchy**: **Data Integrity > System Safety > Contract Correctness > Token/Context Efficiency > Speed**.
 - **Minimal Token Waste**: Write short, targeted bullets. Never rewrite the entire document when appending a single discovery or issue.
+
+---
+
+## 6. Answering "Where Are We?"
+
+Branch notes must answer status questions without anyone re-deriving them: what does the project need now, what is in progress, is it ready for dev testing.
+
+- **Status line upkeep**: Update the branch notes `Status` line at every check-in gate (branch start, chunk milestone, PR opened, merged). `ready-for-dev-test` means the work is on the branch testers run (merged, or a PR with green CI and real runtime verification), with no open 4a items and every manual step listed.
+- **Workspace index**: When one project spans several repositories (an umbrella repo with siblings, or a monorepo with several active branches), keep `docs/STATUS.md` in the umbrella repo, using the template in `references/status-index.md`. Update its row at the same gates. A single-repo project with one active branch needs no index.
+- **Answering procedure**:
+  1. Read `docs/STATUS.md` if it exists, then the branch notes `Status` lines.
+  2. Verify against live state before answering, because docs drift: run `git status` (uncommitted or untracked work), list commits ahead of the base branch, list open PRs with `gh pr list --json number,title,headRefName`, and check CI.
+  3. Lead with the verdict (ready for dev testing / mid-work / blocked), then what is needed next, in order, then owner decisions.
+  4. Flag uncommitted specs, designs or code first: work that exists only on one disk is the highest risk.
+  5. Fix any drift you found in the index and the branch notes in the same turn.
