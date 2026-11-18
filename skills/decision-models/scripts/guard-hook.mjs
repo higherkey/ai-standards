@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 // Claude Code PreToolUse hook (matcher: Bash).
 // Cheap pre-filter first; only commands that look destructive are sent to a decision model
-// (Perplexity Decider v1.2, ~$0.00001 per call, ~300 ms). If the model thinks it is irreversible/off-task, the user
+// (the registry's default model, ~$0.00001 per call, ~300 ms). If the model thinks it is irreversible/off-task, the user
 // is asked to confirm. Fails OPEN on any error, missing key, or timeout so it never blocks work.
 // Disable with DECISION_GUARD=off. Tune with GUARD_MODEL, GUARD_IRREVERSIBLE, GUARD_OFFTASK.
 import { existsSync, readFileSync } from "node:fs";
-import { decide, noul } from "./sysone.mjs";
+// Dynamic import so a missing or broken models.json still fails open.
+const { decide, noul, DEFAULT } = await import("./sysone.mjs").catch(() => process.exit(0));
 
 const RISKY = [
   /\brm\s+(-[a-z]*\s+)*-[a-z]*[rf]/i, /\brm\s+.*\s-[a-z]*[rf]/i,
@@ -23,7 +24,7 @@ const REGENERABLE = /^\s*rm\s+(-[a-z]+\s+)+(\.\/)?(node_modules|dist|build|out|c
 
 const IRREVERSIBLE = Number(process.env.GUARD_IRREVERSIBLE ?? 0.7);
 const OFFTASK = Number(process.env.GUARD_OFFTASK ?? 0.85);
-const MODEL = process.env.GUARD_MODEL ?? "decider";
+const MODEL = process.env.GUARD_MODEL ?? DEFAULT;
 
 function lastUserPrompt(path) {
   try {

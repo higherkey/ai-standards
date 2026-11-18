@@ -1,0 +1,15 @@
+{
+  "verified": "2026-11-17",
+  "default": "decider",
+  "aliases": { "pplx": "decider" },
+  "watch": [],
+  "models": {
+    "decider":  { "id": "perplexity/pplx-decider-v1.2", "family": "perplexity/pplx-decider-v{v}", "price": 0.020, "ctx": 262144, "aa": 69.8, "note": "default; best on our hard spot-check (62/63) and cheapest" },
+    "drex":     { "id": "nace-ai/drex-max",             "family": null,                           "price": 0.060, "ctx": 524288, "aa": 72.6, "maxQ": 16, "note": "top of AA v2.1; 16 questions/call (auto-split); >~130k state is BM25-selected" },
+    "mammoth":  { "id": "baseten/mammoth-1",            "family": "baseten/mammoth-{v}",          "price": 0.100, "ctx": 16384,  "aa": 71.4, "note": "exact pattern/regex calls; best invariance; short inputs only" },
+    "ultra":    { "id": "liquid/d1-ultra",              "family": null,                           "price": 0.042, "ctx": 32768,  "aa": 70.6, "note": "second opinion, other family; images; fastest of the strong set" },
+    "elephant": { "id": "baseten/elephant-1",           "family": "baseten/elephant-{v}",         "price": 0.035, "ctx": 16384,  "aa": 66.4, "note": "fastest; weak on code details in our spot-check" },
+    "jev":      { "id": "typesafe/jev-1.14",            "family": "typesafe/jev-{v}",             "price": 0.042, "ctx": 262144, "aa": 66.2, "note": "comparison only; 55-57/63 on our hard spot-check, unstable" },
+    "d1":       { "id": "liquid/d1.1",                  "family": "liquid/d{v}",                  "price": 0.020, "ctx": 65536,  "aa": null, "note": "comparison only; not in AA; 54-55/63 on our hard spot-check, unstable" }
+  }
+}

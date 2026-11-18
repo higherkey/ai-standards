@@ -7,7 +7,7 @@
 // Never reads .env, *.db, lockfiles or dist/. Code leaves your machine only to OpenRouter.
 import { mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
-import { MODELS, choice, decide, modelId } from "./sysone.mjs";
+import { DEFAULT, choice, decide, modelId } from "./sysone.mjs";
 
 const argv = process.argv.slice(2);
 const flag = (n, d) => { const i = argv.indexOf(n); return i >= 0 ? argv[i + 1] : d; };
@@ -17,8 +17,8 @@ if (argv.includes("--help") || !flag("--checks")) {
 }
 const cfg = JSON.parse(readFileSync(resolve(flag("--checks")), "utf8"));
 const mode = flag("--mode", "both");
-const mScoped = flag("--model-scoped", "decider");
-const mWide = flag("--model-wide", "decider");
+const mScoped = flag("--model-scoped", DEFAULT);
+const mWide = flag("--model-wide", DEFAULT);
 const root = cfg.root;
 const claims = cfg.claims.slice(0, Number(flag("--limit", 1e9)));
 
