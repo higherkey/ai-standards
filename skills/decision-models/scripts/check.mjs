@@ -32,9 +32,9 @@ const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 // Group 1 is the version. A dated snapshot suffix (-20261016) and a trailing "." are allowed;
 // a named variant (-ultra, -preview, 1.14b) is not, so liquid/d1-ultra never reads as liquid/d1.
 // The \.\d guard stops backtracking from 1.2-preview to a false match on "1".
-export function familyRegex(family, flags = "g") {
+export function familyRegex(family) {
   const [pre, post] = family.split("{v}");
-  return new RegExp(`${esc(pre)}(\\d+(?:\\.\\d+)*)${esc(post)}(?![\\w]|\\.\\d|-[a-z])`, flags);
+  return new RegExp(`${esc(pre)}(\\d+(?:\\.\\d+)*)${esc(post)}(?![\\w]|\\.\\d|-[a-z])`, "g");
 }
 
 export function versionOf(id, family) {
@@ -145,10 +145,9 @@ if (isMain) {
     const stale = scanDir(root).filter((h) => newest[h.key] && cmpVersion(h.version, newest[h.key].version) < 0);
     // One line per file and id, so a results file with hundreds of copies stays readable.
     const groups = new Map();
-    for (const h of stale) groups.set(`${h.file}\0${h.id}`, [...(groups.get(`${h.file}\0${h.id}`) ?? []), h]);
+    for (const h of stale) { const g = groups.get(`${h.file}\0${h.id}`); g ? g.more++ : groups.set(`${h.file}\0${h.id}`, { ...h, more: 0 }); }
     console.log(`\n${root}: ${stale.length ? `${stale.length} outdated in ${new Set(stale.map((h) => h.file)).size} files` : "nothing outdated"}`);
-    for (const [first, ...rest] of groups.values())
-      console.log(`  ${first.file}:${first.line}${rest.length ? ` (+${rest.length} more)` : ""}  ${first.id}  -> ${newest[first.key].id}`);
+    for (const g of groups.values()) console.log(`  ${g.file}:${g.line}${g.more ? ` (+${g.more} more)` : ""}  ${g.id}  -> ${newest[g.key].id}`);
     if (stale.length) action = true;
   }
   process.exitCode = !process.env.OPENROUTER_API_KEY && !roots.length ? 2 : action ? 1 : 0;

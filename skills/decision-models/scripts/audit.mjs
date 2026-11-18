@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Spec-vs-code audit with decision models.
-//   node audit.mjs --checks checks/e1f.json [--mode scoped|wide|both]
-//                  [--model-scoped decider] [--model-wide decider] [--out report.md] [--limit N]
+//   node audit.mjs --checks checks/<name>.json [--mode scoped|wide|both]
+//                  [--model-scoped <key>] [--model-wide <key>] [--out report.md] [--limit N]   (both default to models.json "default")
 // scoped: one small request per claim (only that claim's evidence files). Cheap, accurate, parallel.
 // wide:   ONE request holding the whole plan + all code, with every claim as a question (large-context test).
 // Never reads .env, *.db, lockfiles or dist/. Code leaves your machine only to OpenRouter.
@@ -12,7 +12,7 @@ import { DEFAULT, choice, decide, modelId } from "./sysone.mjs";
 const argv = process.argv.slice(2);
 const flag = (n, d) => { const i = argv.indexOf(n); return i >= 0 ? argv[i + 1] : d; };
 if (argv.includes("--help") || !flag("--checks")) {
-  console.log("usage: node audit.mjs --checks checks/e1f.json [--mode scoped|wide|both] [--model-scoped decider] [--model-wide decider] [--out report.md] [--limit N]");
+  console.log(`usage: node audit.mjs --checks checks/<name>.json [--mode scoped|wide|both] [--model-scoped ${DEFAULT}] [--model-wide ${DEFAULT}] [--out report.md] [--limit N]`);
   process.exit(argv.includes("--help") ? 0 : 2);
 }
 const cfg = JSON.parse(readFileSync(resolve(flag("--checks")), "utf8"));

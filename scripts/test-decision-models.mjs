@@ -101,6 +101,16 @@ test('probe uses a short timeout so an outage cannot hang the check', async () =
   assert.ok(opts.timeoutMs <= 15000, `timeoutMs ${opts.timeoutMs}`);
 });
 
+test('CLI groups many repeat hits quickly', () => {
+  const [pre, post] = MODELS.d1.family.split('{v}');
+  const root = mkdtempSync(join(tmp, 'scan-'));
+  writeFileSync(join(root, 'results.json'), `"${pre}0.9${post}",\n`.repeat(65000)); // ~1 MB, under the size cap
+  const t0 = Date.now();
+  const out = spawnSync(process.execPath, [join(scripts, 'check.mjs'), '--scan', root], { env: envWithoutKey(), encoding: 'utf8' });
+  assert.match(out.stdout, /results\.json:1 \(\+64999 more\)/);
+  assert.ok(Date.now() - t0 < 5000, `took ${Date.now() - t0} ms`); // was ~17 s when grouping copied arrays
+});
+
 test('CLI runs when started through a linked folder', () => {
   const link = join(tmp, 'linked-scripts');
   symlinkSync(scripts, link, 'junction'); // junction needs no admin rights on Windows; a dir symlink elsewhere
