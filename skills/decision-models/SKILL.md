@@ -28,7 +28,7 @@ Use a decision model when the question is **narrow, answerable from the text you
 Do NOT use one for writing or editing code, open-ended reasoning, anything that needs an explanation, or as the sole gate on an irreversible action. Treat results as **advisory evidence**; when a result is low confidence or decisive, verify by reading the relevant lines yourself.
 
 ## Which model
-Starting points from the Artificial Analysis Decision Index v2.1 (score / $ per 1M tasks), where the cost-quality Pareto front is Celeris (not on OpenRouter) → Decider → Drex Max. Treat the index as one input, not the final word: it lags new releases, may test a different version than the id you call (it scores d1, not d1.1), and its tasks may not match yours. Before relying on a model for a recurring judgment, spot-check it on a few labeled examples from your own work.
+Starting points from the Artificial Analysis Decision Index v2.1 (score / $ per 1M tasks), where the cost-quality Pareto front is Celeris (not on OpenRouter) → Decider → Drex Max. Treat the index as one input, not the final word: it lags new releases, may test a different version than the id you call (it scores d1, not the d1.2 we call), and its tasks may not match yours. Before relying on a model for a recurring judgment, spot-check it on a few labeled examples from your own work.
 
 Our hard spot-check: 63 questions on real code, diffs, and test lists, with regex answers computed by running the regexes. Scores are correct answers out of 63 and cost per run.
 
@@ -44,7 +44,7 @@ Our hard spot-check: 63 questions on real code, diffs, and test lists, with rege
 Context caps are hard. Prefer **small, scoped evidence per question**; many questions (up to 128; 16 for `drex`, which `decide()` splits for you) can share one state in a single call. Model ids live in `models.json`; `node <skill-dir>/scripts/decide.mjs --models` prints them with prices and context sizes.
 
 ## Keeping models current
-- `node <skill-dir>/scripts/check.mjs` probes OpenRouter for each model's current id and its likely next versions (about $0.0001 per run). `NEW` means a newer version is live; `COMING` means listed but not served yet. Exit code 1 means something needs action.
+- `node <skill-dir>/scripts/check.mjs` probes OpenRouter for each model's current id and its likely next versions (about $0.0001 per run). `NEW` means a newer version is live; `COMING` means listed but not served yet. Exit code 1 means something needs action; 2 means no key and no `--scan`, so nothing ran.
 - Add `--scan <dir>` (repeatable) to list outdated ids in other repos. It reads local files only and works without a key.
 - To adopt a version, edit `models.json`. Before changing `default`, or a model a gate relies on, run `node bench/decision-models/run.mjs --only=<key>` from the ai-standards repo.
 - Apps and evals pin their own ids on purpose. Find stale ones with `--scan` and bump them in their own repos, rerunning any eval tuned to the old id.
@@ -68,11 +68,11 @@ Spec-vs-code audit across many claims: `node <skill-dir>/scripts/audit.mjs --hel
 
 ## Reading results
 - `noul` is P(yes), 0 to 1. `choice` returns the pick plus `confidence` and per-option `probabilities`. `score` returns a value on the ordered criteria.
-- **Calibration differs by model.** On our spot-check, decider and ultra had the lowest Brier scores (0.018 and 0.019), while d1.1 and jev were the worst (0.070 and 0.074). Even strong models can be confidently wrong on subtle code details, such as what `slice(0, n)` keeps or a case-insensitive regex flag. For those, read the line yourself. Start around 0.7 for "act on it" and treat below 0.5 as "unsure"; tune using the usage log.
+- **Calibration differs by model.** On our spot-check, decider and ultra had the lowest Brier scores (0.018 and 0.019), while d1 and jev were the worst (0.077 for d1.2, 0.074 for jev). Even strong models can be confidently wrong on subtle code details, such as what `slice(0, n)` keeps or a case-insensitive regex flag. For those, read the line yourself. Start around 0.7 for "act on it" and treat below 0.5 as "unsure"; tune using the usage log.
 - If two models disagree, or confidence is under about 0.6, escalate once (decider to ultra, or to mammoth for exact pattern questions or when wording or option order might matter) or read the source yourself. Do not loop.
 
 ## Optional: destructive-command guard (Claude Code)
-`scripts/guard-hook.mjs` is a PreToolUse hook for Bash. A regex pre-filter sends only risky-looking commands to decider (set `GUARD_MODEL=d1` for the old behavior) and asks the user to confirm when the model judges them irreversible, off-task, or outside the project. It fails open (never blocks on errors or a missing key). It is opt-in: register it yourself in `.claude/settings.json` under `hooks.PreToolUse` with matcher `Bash` and command `node <absolute-skill-dir>/scripts/guard-hook.mjs`. Disable with `DECISION_GUARD=off`.
+`scripts/guard-hook.mjs` is a PreToolUse hook for Bash. A regex pre-filter sends only risky-looking commands to the registry's default model (set `GUARD_MODEL=<key>` to use another) and asks the user to confirm when the model judges them irreversible, off-task, or outside the project. It fails open (never blocks on errors or a missing key). It is opt-in: register it yourself in `.claude/settings.json` under `hooks.PreToolUse` with matcher `Bash` and command `node <absolute-skill-dir>/scripts/guard-hook.mjs`. Disable with `DECISION_GUARD=off`.
 
 ## Cost and usage log
 Each call appends metadata only (time, model, latency, tokens, cost; never state content) to `~/.ai-standards/decision-log.jsonl`. Override the path with `DECISION_LOG`, or set `DECISION_LOG=off`.

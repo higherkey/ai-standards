@@ -2,7 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { cpSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { cpSync, mkdirSync, mkdtempSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -88,6 +88,24 @@ test('familyRegex and versionOf', () => {
   assert.equal(versionOf('liquid/d1-ultra', 'liquid/d{v}'), null);
   assert.equal(versionOf('perplexity/pplx-decider-v1.2-20261016', 'perplexity/pplx-decider-v{v}'), '1.2');
   assert.equal(versionOf('typesafe/jev-router', 'typesafe/jev-{v}'), null);
+  assert.equal(versionOf('liquid/d1.2-ultra', 'liquid/d{v}'), null); // no backtracking to "1"
+});
+
+test('scanText does not backtrack to a shorter version', () => {
+  assert.deepEqual(scanText('perplexity/pplx-decider-v1.2-preview\ntypesafe/jev-1.14b'), []);
+});
+
+test('probe uses a short timeout so an outage cannot hang the check', async () => {
+  let opts;
+  await probe('x', async (id, state, questions, o) => { opts = o; return { model: 'x-1' }; });
+  assert.ok(opts.timeoutMs <= 15000, `timeoutMs ${opts.timeoutMs}`);
+});
+
+test('CLI runs when started through a linked folder', () => {
+  const link = join(tmp, 'linked-scripts');
+  symlinkSync(scripts, link, 'junction'); // junction needs no admin rights on Windows; a dir symlink elsewhere
+  const out = spawnSync(process.execPath, [join(link, 'check.mjs'), '--scan', tmp], { env: envWithoutKey(), encoding: 'utf8' });
+  assert.match(out.stdout, /no OPENROUTER_API_KEY: skipping probes/);
 });
 
 test('probe classifies responses', async () => {

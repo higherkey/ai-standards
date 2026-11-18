@@ -7,9 +7,9 @@
 // Scanning only reads local files; nothing from them is sent anywhere. Without OPENROUTER_API_KEY it
 // skips the probes and compares against models.json alone.
 // Exit code 1 when something needs action (a current id is not live, a newer version is live, or an id is outdated).
-import { readdirSync, readFileSync, statSync } from "node:fs";
+import { readdirSync, readFileSync, realpathSync, statSync } from "node:fs";
 import { join } from "node:path";
-import { pathToFileURL } from "node:url";
+import { fileURLToPath } from "node:url";
 import { MODELS, WATCH, decide, noul } from "./sysone.mjs";
 
 export function cmpVersion(a, b) {
@@ -30,10 +30,11 @@ export function candidateVersions(v) {
 
 const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 // Group 1 is the version. A dated snapshot suffix (-20261016) and a trailing "." are allowed;
-// a named variant (-ultra) is not, so liquid/d1-ultra never reads as liquid/d1.
+// a named variant (-ultra, -preview, 1.14b) is not, so liquid/d1-ultra never reads as liquid/d1.
+// The \.\d guard stops backtracking from 1.2-preview to a false match on "1".
 export function familyRegex(family, flags = "g") {
   const [pre, post] = family.split("{v}");
-  return new RegExp(`${esc(pre)}(\\d+(?:\\.\\d+)*)${esc(post)}(?![\\w]|-[a-z])`, flags);
+  return new RegExp(`${esc(pre)}(\\d+(?:\\.\\d+)*)${esc(post)}(?![\\w]|\\.\\d|-[a-z])`, flags);
 }
 
 export function versionOf(id, family) {
@@ -42,7 +43,8 @@ export function versionOf(id, family) {
 
 export async function probe(id, decideFn = decide) {
   try {
-    const r = await decideFn(id, "ping", { q: noul("Is this a ping?") }, { tag: "check" });
+    // 15 s, not the 60 s default: ~30 probes during a network hang would otherwise take half an hour.
+    const r = await decideFn(id, "ping", { q: noul("Is this a ping?") }, { tag: "check", timeoutMs: 15000 });
     return { id, status: "live", served: r.model };
   } catch (e) {
     if (e.status === 404 && /no endpoints/i.test(e.message)) return { id, status: "listed" };
@@ -127,7 +129,10 @@ export function newestKnown(models = MODELS, reports = []) {
   return out;
 }
 
-const isMain = process.argv[1] && import.meta.url.toLowerCase() === pathToFileURL(process.argv[1]).href.toLowerCase();
+// Node realpaths the main module's URL but not argv[1], so compare real paths (a linked skill folder would
+// otherwise make the CLI a silent no-op). Lowercase for Windows drive-letter case.
+const realArgv = () => { try { return realpathSync(process.argv[1]); } catch { return ""; } };
+const isMain = process.argv[1] && realArgv().toLowerCase() === fileURLToPath(import.meta.url).toLowerCase();
 if (isMain) {
   const argv = process.argv.slice(2);
   const roots = argv.flatMap((a, i) => (a === "--scan" && argv[i + 1] ? [argv[i + 1]] : []));
