@@ -12,6 +12,7 @@ const log = join(tmp, 'decision-log.jsonl');
 process.env.DECISION_LOG = log; // sysone reads this at load time
 const scripts = fileURLToPath(new URL('../skills/decision-models/scripts/', import.meta.url));
 const { MODELS, ALIASES, DEFAULT, entry, modelId, loadRegistry, decide, noul } = await import(new URL('../skills/decision-models/scripts/sysone.mjs', import.meta.url));
+const { cmpVersion, candidateVersions, versionOf, probe, checkModels } = await import(new URL('../skills/decision-models/scripts/check.mjs', import.meta.url));
 
 const envWithoutKey = () => { const env = { ...process.env, DECISION_LOG: 'off' }; delete env.OPENROUTER_API_KEY; return env; };
 
@@ -68,4 +69,41 @@ test('decide attaches HTTP status and logs the served snapshot', async (t) => {
   await assert.rejects(decide('d1', 's', q), (e) => e.status === 404);
   await decide('d1', 's', q);
   assert.match(readFileSync(log, 'utf8'), /"served":"liquid\/d1\.2-20261116"/);
+});
+
+test('cmpVersion is numeric', () => {
+  assert.ok(cmpVersion('1.10', '1.9') > 0);
+  assert.equal(cmpVersion('1', '1.0'), 0);
+  assert.ok(cmpVersion('1.2', '2') < 0);
+});
+
+test('candidateVersions', () => {
+  assert.deepEqual(candidateVersions('1.2'), ['1.3', '1.4', '2', '2.0']);
+  assert.deepEqual(candidateVersions('1'), ['1.1', '2']);
+  assert.deepEqual(candidateVersions('1.14'), ['1.15', '1.16', '2', '2.0']);
+});
+
+test('familyRegex and versionOf', () => {
+  assert.equal(versionOf('liquid/d1.1', 'liquid/d{v}'), '1.1');
+  assert.equal(versionOf('liquid/d1-ultra', 'liquid/d{v}'), null);
+  assert.equal(versionOf('perplexity/pplx-decider-v1.2-20261016', 'perplexity/pplx-decider-v{v}'), '1.2');
+  assert.equal(versionOf('typesafe/jev-router', 'typesafe/jev-{v}'), null);
+});
+
+test('probe classifies responses', async () => {
+  const ok = async () => ({ model: 'liquid/d1.2-20261116', answers: {} });
+  const fail = (status, msg) => async () => { const e = new Error(msg); e.status = status; throw e; };
+  assert.deepEqual(await probe('liquid/d1.2', ok), { id: 'liquid/d1.2', status: 'live', served: 'liquid/d1.2-20261116' });
+  assert.equal((await probe('x', fail(404, 'No endpoints found for x'))).status, 'listed');
+  assert.equal((await probe('x', fail(400, 'Model x does not exist'))).status, 'absent');
+  assert.equal((await probe('x', fail(429, 'rate limited'))).status, 'error');
+  assert.equal((await probe('x', fail(400, 'bad questions'))).status, 'error');
+  assert.equal((await probe('x', async () => { throw new TypeError('fetch failed'); })).status, 'error');
+});
+
+test('checkModels reports only live/listed newer candidates', async () => {
+  const live = new Set(['liquid/d1.1', 'liquid/d1.2']);
+  const fake = async (id) => { if (live.has(id)) return { model: id + '-x' }; const e = new Error(`Model ${id} does not exist`); e.status = 400; throw e; };
+  const [r] = await checkModels({ d1: { id: 'liquid/d1.1', family: 'liquid/d{v}' } }, [], fake);
+  assert.deepEqual(r.newer.map((p) => p.id), ['liquid/d1.2']);
 });
