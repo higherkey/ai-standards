@@ -2,7 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { cpSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { cpSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -12,7 +12,7 @@ const log = join(tmp, 'decision-log.jsonl');
 process.env.DECISION_LOG = log; // sysone reads this at load time
 const scripts = fileURLToPath(new URL('../skills/decision-models/scripts/', import.meta.url));
 const { MODELS, ALIASES, DEFAULT, entry, modelId, loadRegistry, decide, noul } = await import(new URL('../skills/decision-models/scripts/sysone.mjs', import.meta.url));
-const { cmpVersion, candidateVersions, versionOf, probe, checkModels } = await import(new URL('../skills/decision-models/scripts/check.mjs', import.meta.url));
+const { cmpVersion, candidateVersions, versionOf, probe, checkModels, scanText, scanDir } = await import(new URL('../skills/decision-models/scripts/check.mjs', import.meta.url));
 
 const envWithoutKey = () => { const env = { ...process.env, DECISION_LOG: 'off' }; delete env.OPENROUTER_API_KEY; return env; };
 
@@ -106,4 +106,53 @@ test('checkModels reports only live/listed newer candidates', async () => {
   const fake = async (id) => { if (live.has(id)) return { model: id + '-x' }; const e = new Error(`Model ${id} does not exist`); e.status = 400; throw e; };
   const [r] = await checkModels({ d1: { id: 'liquid/d1.1', family: 'liquid/d{v}' } }, [], fake);
   assert.deepEqual(r.newer.map((p) => p.id), ['liquid/d1.2']);
+});
+
+test('scanText finds versioned ids and ignores lookalikes', () => {
+  const text = 'a "liquid/d1.1" b\nliquid/d1-ultra\nuse perplexity/pplx-decider-v1.2.\ntypesafe/jev-router\nbaseten/mammoth-1-20261001';
+  assert.deepEqual(scanText(text).map((h) => [h.line, h.key, h.version]),
+    [[1, 'd1', '1.1'], [3, 'decider', '1.2'], [5, 'mammoth', '1']]);
+});
+
+// A tree where every file mentions an id, but only src/a.ts may be read.
+function scanTree(id) {
+  const root = mkdtempSync(join(tmp, 'scan-'));
+  const put = (rel, body = `model: "${id}"\n`) => { mkdirSync(join(root, rel, '..'), { recursive: true }); writeFileSync(join(root, rel), body); };
+  put('src/a.ts');
+  for (const rel of ['node_modules/x/index.js', '.git/config', 'package-lock.json', '.env', 'dist/out.js', 'data.db',
+    'target/debug/build.rs', '__pycache__/a.pyc', '.venv/lib/site.py']) put(rel);
+  put('big.json', `${'x'.repeat(1_100_000)}\n"${id}"\n`);
+  return root;
+}
+
+test('scanDir skips node_modules, .git, lockfiles, .env, build output, binaries, and files over 1 MB', () => {
+  const root = scanTree('liquid/d1.1');
+  assert.deepEqual(scanDir(root).map((h) => h.file.replaceAll('\\', '/')), ['src/a.ts']);
+});
+
+test('CLI without a key still scans', () => {
+  const root = scanTree(MODELS.d1.id); // read from the registry so a version bump keeps this green
+  const checkPath = join(scripts, 'check.mjs');
+  const out = spawnSync(process.execPath, [checkPath, '--scan', root], { env: envWithoutKey(), encoding: 'utf8' });
+  assert.match(out.stdout, /no OPENROUTER_API_KEY: skipping probes/);
+  assert.equal(out.status, 0, out.stdout + out.stderr);
+});
+
+test('CLI reports an outdated id and exits 1', () => {
+  const [pre, post] = MODELS.d1.family.split('{v}');
+  const root = scanTree(`${pre}0.9${post}`);
+  const out = spawnSync(process.execPath, [join(scripts, 'check.mjs'), '--scan', root], { env: envWithoutKey(), encoding: 'utf8' });
+  const reEsc = (s) => s.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&');
+  assert.match(out.stdout, new RegExp(`src[\\\\/]a\\.ts:1 +${reEsc(`${pre}0.9${post}`)} +-> ${reEsc(MODELS.d1.id)}`));
+  assert.equal(out.status, 1);
+});
+
+test('CLI collapses repeated hits of one id in one file', () => {
+  const [pre, post] = MODELS.d1.family.split('{v}');
+  const old = `${pre}0.9${post}`;
+  const root = mkdtempSync(join(tmp, 'scan-'));
+  writeFileSync(join(root, 'results.json'), `"${old}"\n"${old}"\n"${old}"\n`);
+  const out = spawnSync(process.execPath, [join(scripts, 'check.mjs'), '--scan', root], { env: envWithoutKey(), encoding: 'utf8' });
+  assert.match(out.stdout, /results\.json:1 \(\+2 more\)/);
+  assert.equal(out.stdout.split('\n').filter((l) => l.includes(old)).length, 1);
 });
