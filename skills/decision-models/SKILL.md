@@ -30,20 +30,25 @@ Do NOT use one for writing or editing code, open-ended reasoning, anything that 
 ## Which model
 Starting points from the Artificial Analysis Decision Index v2.1 (score / $ per 1M tasks), where the cost-quality Pareto front is Celeris (not on OpenRouter) → Decider → Drex Max. Treat the index as one input, not the final word: it lags new releases, may test a different version than the id you call (it scores d1, not d1.1), and its tasks may not match yours. Before relying on a model for a recurring judgment, spot-check it on a few labeled examples from your own work.
 
-| Need | Model | Why / limit |
-|---|---|---|
 Our hard spot-check: 63 questions on real code, diffs, and test lists, with regex answers computed by running the regexes. Scores are correct answers out of 63 and cost per run.
 
 | Need | Model | Index / our check / limits |
 |---|---|---|
-| Default for triage, routing, drift, and code reading | `decider` (pplx-decider-v1.2) | 69.8 / 62 at $0.00025 (best accuracy and calibration, cheapest); 262k context |
-| Second opinion from another family; images | `ultra` (d1-ultra) | 70.6 / 62 at $0.0005, fastest; 32k context |
+| Default for triage, routing, drift, and code reading | `decider` | 69.8 / 62 at $0.00025 (best accuracy and calibration, cheapest); 262k context |
+| Second opinion from another family; images | `ultra` | 70.6 / 62 at $0.0005, fastest; 32k context |
 | Exact pattern or regex questions; order- or wording-sensitive calls | `mammoth` | 71.4 / 61, the only model with every regex right, at $0.0014; 16k context |
-| Very large state (above 262k) | `drex` (nace-ai/drex-max) | 72.6 / 60 at $0.0013; 16 questions per call (auto-split); above ~130k it retrieves passages instead of reading everything |
+| Very large state (above 262k) | `drex` | 72.6 / 60 at $0.0013; 16 questions per call (auto-split); above ~130k it retrieves passages instead of reading everything |
 | Fastest plain-language triage | `elephant` | 66.4 / 59; ~80 ms; 16k context; misses code details |
-| Comparison only | `jev` (jev-1.14), `d1` (liquid/d1.1) | jev 66.2 / 55-57; d1.1 unscored / 54-55. Both are weak on code and their answers changed between runs |
+| Comparison only | `jev`, `d1` | jev 66.2 / 55-57; d1 unscored / 57-59. Both are weak on code and their answers changed between runs |
 
-Context caps are hard. Prefer **small, scoped evidence per question**; many questions (up to 128; 16 for `drex`, which `decide()` splits for you) can share one state in a single call. `node <skill-dir>/scripts/decide.mjs --models` prints the current table; model ids change, so update `scripts/sysone.mjs` when OpenRouter renames them.
+Context caps are hard. Prefer **small, scoped evidence per question**; many questions (up to 128; 16 for `drex`, which `decide()` splits for you) can share one state in a single call. Model ids live in `models.json`; `node <skill-dir>/scripts/decide.mjs --models` prints them with prices and context sizes.
+
+## Keeping models current
+- `node <skill-dir>/scripts/check.mjs` probes OpenRouter for each model's current id and its likely next versions (about $0.0001 per run). `NEW` means a newer version is live; `COMING` means listed but not served yet. Exit code 1 means something needs action.
+- Add `--scan <dir>` (repeatable) to list outdated ids in other repos. It reads local files only and works without a key.
+- To adopt a version, edit `models.json`. Before changing `default`, or a model a gate relies on, run `node bench/decision-models/run.mjs --only=<key>` from the ai-standards repo.
+- Apps and evals pin their own ids on purpose. Find stale ones with `--scan` and bump them in their own repos, rerunning any eval tuned to the old id.
+- For a model that is announced but not served yet, add its id to `watch`; `check.mjs` reports it once it goes live.
 
 ## How to call
 Ad-hoc yes/no (probability of "yes" per question):
