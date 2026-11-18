@@ -2,8 +2,8 @@
 // so labels stay valid as the skill changes. Regex labels are computed by running the hook regexes.
 // Usage: node bench/decision-models/run.mjs [--only=decider,ultra] [--truth]   (needs OPENROUTER_API_KEY; ~$0.006 per full run)
 import { readFileSync, writeFileSync } from "node:fs";
-import { decide } from "../../skills/decision-models/scripts/sysone.mjs";
-const ALL_MODELS = { d1: "liquid/d1.1", decider: "perplexity/pplx-decider-v1.2", drex: "nace-ai/drex-max", elephant: "baseten/elephant-1", mammoth: "baseten/mammoth-1", ultra: "liquid/d1-ultra", jev: "typesafe/jev-1.14" };
+import { MODELS as REGISTRY, decide } from "../../skills/decision-models/scripts/sysone.mjs";
+const ALL_MODELS = Object.fromEntries(Object.entries(REGISTRY).map(([k, m]) => [k, m.id]));
 const ONLY = process.argv.find((a) => a.startsWith("--only="))?.slice(7);
 const MODELS = ONLY ? Object.fromEntries(ONLY.split(",").map((k) => [k, ALL_MODELS[k]])) : ALL_MODELS;
 const dir = new URL(".", import.meta.url);

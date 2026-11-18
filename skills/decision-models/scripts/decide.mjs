@@ -6,15 +6,17 @@
 //   node decide.mjs --models                          (show the model table)
 // --ask adds a yes/no (noul) question; answers print as probabilities of "yes".
 import { readFileSync } from "node:fs";
-import { MODELS, decide, noul } from "./sysone.mjs";
+import { ALIASES, DEFAULT, MODELS, VERIFIED, decide, noul } from "./sysone.mjs";
 
 const argv = process.argv.slice(2);
 const flag = (n) => { const i = argv.indexOf(n); return i >= 0 ? argv[i + 1] : undefined; };
 const all = (n) => argv.flatMap((a, i) => (a === n ? [argv[i + 1]] : []));
 
 if (argv.includes("--models")) {
+  console.log(`models.json verified ${VERIFIED}; * = default`);
   for (const [k, m] of Object.entries(MODELS))
-    console.log(`${k.padEnd(9)} ${m.id.padEnd(30)} $${m.price.toFixed(3)}/M  ctx ${String(m.ctx).padEnd(7)} AA ${m.aa ?? "-"}  ${m.note}`);
+    console.log(`${k === DEFAULT ? "*" : " "}${k.padEnd(9)} ${m.id.padEnd(30)} $${m.price.toFixed(3)}/M  ctx ${String(m.ctx).padEnd(7)} AA ${m.aa ?? "-"}  ${m.note}`);
+  console.log(`aliases: ${Object.entries(ALIASES).map(([a, k]) => `${a} -> ${k}`).join(", ") || "none"}`);
   process.exit(0);
 }
 
@@ -29,6 +31,6 @@ if (state === undefined && !Object.keys(questions).length && !process.stdin.isTT
 }
 if (!Object.keys(questions).length) { console.error("No questions. Use --ask, --questions-file, or pipe JSON {state, questions}."); process.exit(2); }
 
-const model = flag("--model") ?? "decider";
+const model = flag("--model") ?? DEFAULT;
 const r = await decide(model, state, questions, { tag: "cli" });
 console.log(JSON.stringify({ model: r.model, ms: r._latencyMs, tokens: r.usage?.input_tokens, cost: r.usage?.cost, answers: r.answers }, null, 2));

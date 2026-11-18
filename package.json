@@ -19,7 +19,7 @@
     "registry": "https://npm.pkg.github.com"
   },
   "scripts": {
-    "test": "node scripts/test-cli.js"
+    "test": "node scripts/test-cli.js && node --test scripts/test-decision-models.mjs"
   },
   "repository": {
     "type": "git",
